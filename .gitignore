@@ -1,0 +1,19 @@
+node_modules/
+dist/
+*.local
+.env
+.env.*
+
+# generated at build from node_modules (kept version-matched to pdfjs-dist)
+public/pdf.worker.min.mjs
+
+# design system source (not shipped in the OSS repo)
+10xStudio Redesign/
+
+# local-only asset staging (README screenshots live under public_assets too — see note)
+public_assets/
+
+# internal / private docs — kept locally, excluded from the public repo
+plans/
+docs/superpowers/
+deploy-guide.html

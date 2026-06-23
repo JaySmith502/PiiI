@@ -1,0 +1,11 @@
+{
+  "customer": {
+    "name": "Sarah Chen",
+    "dob": "11-14-1982",
+    "ssn": "104-55-6356",
+    "phone": "502-111-6656",
+    "email": "sarah.chen@example.com",
+    "creditCard": "4532 0151 1283 0366"
+  },
+  "notes": "Contact the customer at the number above to confirm the order."
+}
