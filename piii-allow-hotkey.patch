@@ -1,0 +1,150 @@
+diff --git a/src/background/index.ts b/src/background/index.ts
+index 63d036f..281be70 100644
+--- a/src/background/index.ts
++++ b/src/background/index.ts
+@@ -4,6 +4,7 @@ import type {
+   NerResponse,
+   ContentInboundMessage,
+   RightClickedTermResponse,
++  SelectedTermResponse,
+ } from './messages'
+ import { getSettings, getWhitelist, getAliasMap, setAliasMap, appendAuditEntry, addToWhitelist } from './storage'
+ import type { AliasMap } from '../types'
+@@ -54,6 +55,31 @@ chrome.contextMenus.onClicked.addListener((_info, tab) => {
+   }
+ })
+ 
++// Hotkey path (Alt+Shift+A): mirror of the context-menu allow flow, but the
++// term comes from the page selection instead of a right-clicked highlight.
++// chrome.commands fires in the service worker and can't read the page, so we
++// ask the active tab's content script for window.getSelection(), then whitelist.
++chrome.commands.onCommand.addListener((command) => {
++  if (command !== 'allow-selection') return
++  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
++    if (!tab?.id) return
++    try {
++      chrome.tabs.sendMessage(
++        tab.id,
++        { type: 'GET_SELECTED_TERM' } satisfies ContentInboundMessage,
++        (response?: SelectedTermResponse) => {
++          if (chrome.runtime.lastError || !response?.term) return
++          addToWhitelist(response.term).catch(err =>
++            console.warn('[PiiI] addToWhitelist (hotkey) failed:', err)
++          )
++        }
++      )
++    } catch {
++      // content script not injected on this tab - no-op
++    }
++  })
++})
++
+ chrome.runtime.onMessage.addListener((message: ContentToBackground, _sender, sendResponse) => {
+   handleMessage(message, sendResponse).catch((err) => {
+     sendResponse({ ok: false, error: String(err) })
+diff --git a/src/background/messages.ts b/src/background/messages.ts
+index 47924b3..80632d0 100644
+--- a/src/background/messages.ts
++++ b/src/background/messages.ts
+@@ -24,6 +24,7 @@ export type OffscreenRequest = { type: 'OFFSCREEN_NER'; text: string }
+ export type ContentInboundMessage =
+   | { type: 'GET_CURRENT_ALIASES' }
+   | { type: 'GET_LAST_RIGHTCLICKED_TERM' }
++  | { type: 'GET_SELECTED_TERM' }
+ 
+ // Reply to GET_CURRENT_ALIASES (popup → content)
+ export type CurrentAliasesResponse =
+@@ -32,3 +33,6 @@ export type CurrentAliasesResponse =
+ 
+ // Reply to GET_LAST_RIGHTCLICKED_TERM (service worker → content)
+ export type RightClickedTermResponse = { term: string | null }
++
++// Reply to GET_SELECTED_TERM (service worker → content, hotkey path)
++export type SelectedTermResponse = { term: string | null }
+diff --git a/src/background/storage.ts b/src/background/storage.ts
+index 9ff6330..222d924 100644
+--- a/src/background/storage.ts
++++ b/src/background/storage.ts
+@@ -19,7 +19,9 @@ export async function getWhitelist(): Promise<WhitelistEntry[]> {
+ 
+ export async function addToWhitelist(term: string): Promise<void> {
+   const list = await getWhitelist()
+-  if (list.some(e => e.term === term)) return  // case-sensitive dedup
++  // Case-insensitive dedup so "Abbie" then "abbie" don't create two entries.
++  // Stored casing stays as first-seen for display in the popup.
++  if (list.some(e => e.term.toLowerCase() === term.toLowerCase())) return
+   list.push({ term, addedAt: new Date().toISOString() })
+   await chrome.storage.local.set({ [KEYS.whitelist]: list })
+ }
+diff --git a/src/content/detection/index.ts b/src/content/detection/index.ts
+index cfc8ce5..e839bf5 100644
+--- a/src/content/detection/index.ts
++++ b/src/content/detection/index.ts
+@@ -10,13 +10,19 @@ export function runDetection(text: string, whitelist: Set<string> = new Set()):
+ // Merge regex + NER detections and apply the whitelist over the whole set.
+ // The single source of truth for both scan paths (live chat input + file scan),
+ // which previously hand-wrote this same merge-then-filter sequence.
++//
++// Whitelist matching is case-insensitive: a term allowed as "Abbie" should also
++// suppress "abbie"/"ABBIE", since product and brand names get typed with varied
++// casing. Storage keeps the original casing for display; only the compare folds.
+ export function combineDetections(
+   regex: Detection[],
+   ner: Detection[],
+   whitelist: Set<string> = new Set(),
+ ): Detection[] {
+   const merged = mergeDetections([...regex, ...ner])
+-  return whitelist.size === 0 ? merged : merged.filter(d => !whitelist.has(d.text))
++  if (whitelist.size === 0) return merged
++  const folded = new Set([...whitelist].map(t => t.toLowerCase()))
++  return merged.filter(d => !folded.has(d.text.toLowerCase()))
+ }
+ 
+ // ponytail: remove or strip via build before prod
+diff --git a/src/content/index.tsx b/src/content/index.tsx
+index 0829643..f1b1cd8 100644
+--- a/src/content/index.tsx
++++ b/src/content/index.tsx
+@@ -9,6 +9,7 @@ import type {
+   ContentInboundMessage,
+   CurrentAliasesResponse,
+   RightClickedTermResponse,
++  SelectedTermResponse,
+ } from '../background/messages'
+ import { sendToBackground } from './utils'
+ import { assignAliases } from './aliases'
+@@ -324,5 +325,13 @@ chrome.runtime.onMessage.addListener((msg: ContentInboundMessage, _sender, sendR
+     lastRightClickedTerm = null  // consumed - prevents stale re-use
+     return false
+   }
++  if (msg.type === 'GET_SELECTED_TERM') {
++    // Hotkey path: whitelist whatever the user has selected in the page. Trim to
++    // drop stray whitespace from a double-click selection; empty → null so the
++    // background no-ops instead of adding a blank entry.
++    const term = (window.getSelection()?.toString() ?? '').trim()
++    sendResponse({ term: term || null } satisfies SelectedTermResponse)
++    return false
++  }
+   return false
+ })
+diff --git a/vite.config.ts b/vite.config.ts
+index 0f7e5e1..4f9f126 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -76,6 +76,16 @@ const manifest = defineManifest({
+       '128': 'icons/icon128.png',
+     },
+   },
++  commands: {
++    'allow-selection': {
++      // Alt+Shift+A: avoids the DevTools triad (Ctrl+Shift+I/J, Cmd+Opt+I) and
++      // Firefox's Ctrl+Shift+K. On macOS the browser intercepts the registered
++      // command before the page, so Option+Shift+A does NOT insert a glyph in
++      // the composer. Users can rebind at chrome://extensions/shortcuts.
++      suggested_key: { default: 'Alt+Shift+A' },
++      description: 'Always allow the selected term (skip redaction)',
++    },
++  },
+   background: {
+     service_worker: 'src/background/index.ts',
+     type: 'module',

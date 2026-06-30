@@ -1,0 +1,1 @@
+Built PiiI: a Chrome extension that catches the name, email, phone, and SSN in your prompt and swaps each one for an alias before the message ever reaches ChatGPT, Claude, or Gemini. 100% local - no server, no telemetry, nothing leaves your browser. Open source: github.com/JaySmith502/piii
