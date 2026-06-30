@@ -19,7 +19,9 @@ export async function getWhitelist(): Promise<WhitelistEntry[]> {
 
 export async function addToWhitelist(term: string): Promise<void> {
   const list = await getWhitelist()
-  if (list.some(e => e.term === term)) return  // case-sensitive dedup
+  // Case-insensitive dedup so "Abbie" then "abbie" don't create two entries.
+  // Stored casing stays as first-seen for display in the popup.
+  if (list.some(e => e.term.toLowerCase() === term.toLowerCase())) return
   list.push({ term, addedAt: new Date().toISOString() })
   await chrome.storage.local.set({ [KEYS.whitelist]: list })
 }

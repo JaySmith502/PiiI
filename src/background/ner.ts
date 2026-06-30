@@ -28,8 +28,8 @@ async function _doEnsure(): Promise<void> {
   })
 }
 
-export async function runNer(text: string): Promise<Detection[]> {
-  if (!text.trim()) return []
+export async function runNer(text: string): Promise<{ detections: Detection[]; dropped: number }> {
+  if (!text.trim()) return { detections: [], dropped: 0 }
   await ensureOffscreen()
   const resp = (await chrome.runtime.sendMessage(
     { type: 'OFFSCREEN_NER', text } satisfies OffscreenRequest
@@ -37,7 +37,7 @@ export async function runNer(text: string): Promise<Detection[]> {
   if (!resp || !resp.ok) {
     throw new Error(resp && !resp.ok ? resp.error : 'offscreen NER failed')
   }
-  return resp.detections
+  return { detections: resp.detections, dropped: resp.dropped ?? 0 }
 }
 
 export function warmUp(): void {

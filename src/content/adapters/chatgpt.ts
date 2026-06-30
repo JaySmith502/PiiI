@@ -7,7 +7,6 @@ function getInputElement(): HTMLElement | null {
     '[data-id="prompt-textarea"]',
     'div[contenteditable="true"]',
   ])
-  if (!el) console.warn('[PiiI] chatgpt: no input element matched any selector')
   return el
 }
 

@@ -6,7 +6,6 @@ function getInputElement(): HTMLElement | null {
     'div[contenteditable="true"].ProseMirror',
     'div[contenteditable="true"]',
   ])
-  if (!el) console.warn('[PiiI] claude: no input element matched any selector')
   return el
 }
 

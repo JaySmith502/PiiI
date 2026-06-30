@@ -10,13 +10,19 @@ export function runDetection(text: string, whitelist: Set<string> = new Set()): 
 // Merge regex + NER detections and apply the whitelist over the whole set.
 // The single source of truth for both scan paths (live chat input + file scan),
 // which previously hand-wrote this same merge-then-filter sequence.
+//
+// Whitelist matching is case-insensitive: a term allowed as "Abbie" should also
+// suppress "abbie"/"ABBIE", since product and brand names get typed with varied
+// casing. Storage keeps the original casing for display; only the compare folds.
 export function combineDetections(
   regex: Detection[],
   ner: Detection[],
   whitelist: Set<string> = new Set(),
 ): Detection[] {
   const merged = mergeDetections([...regex, ...ner])
-  return whitelist.size === 0 ? merged : merged.filter(d => !whitelist.has(d.text))
+  if (whitelist.size === 0) return merged
+  const folded = new Set([...whitelist].map(t => t.toLowerCase()))
+  return merged.filter(d => !folded.has(d.text.toLowerCase()))
 }
 
 // ponytail: remove or strip via build before prod

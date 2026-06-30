@@ -9,6 +9,7 @@ import type {
   ContentInboundMessage,
   CurrentAliasesResponse,
   RightClickedTermResponse,
+  SelectedTermResponse,
 } from '../background/messages'
 import { sendToBackground } from './utils'
 import { assignAliases } from './aliases'
@@ -43,11 +44,27 @@ function waitForInput(adapter: PlatformAdapter, cb: (el: HTMLElement) => void): 
     return () => {}
   }
 
+  let found = false
+
+  // The composer can hydrate arbitrarily late on slow SPAs, so the observer is
+  // never torn down on a timer — a deadline that disconnected it left us
+  // permanently unhooked (see history below). Instead, after a grace period we
+  // log ONCE if the input still hasn't appeared: a genuine "selectors are stale,
+  // the site's DOM changed" signal, without the per-load false alarm of warning
+  // on the expected first miss during hydration.
+  const staleWarning = setTimeout(() => {
+    if (!found) {
+      console.warn(`[PiiI] ${adapter.id}: input element not found after 15s — selectors may be stale (site DOM changed?)`)
+    }
+  }, 15000)
+
   const observer = new MutationObserver(() => {
-    const found = adapter.getInputElement()
-    if (found) {
+    const found_el = adapter.getInputElement()
+    if (found_el) {
+      found = true
+      clearTimeout(staleWarning)
       observer.disconnect()
-      cb(found)
+      cb(found_el)
     }
   })
   // Watch attributes too: some editors (Grok/TipTap) mount on an existing node
@@ -59,13 +76,10 @@ function waitForInput(adapter: PlatformAdapter, cb: (el: HTMLElement) => void): 
     attributes: true,
     attributeFilter: ['contenteditable', 'class', 'role'],
   })
-  // ponytail: no fixed bail-out. The composer can hydrate arbitrarily late on
-  // slow SPAs (Grok mounts it well after load, past any deadline we'd pick), and
-  // a timeout that fired first left us permanently unhooked. The observer
-  // self-disconnects on the first match; onConversationChange/unload also tear it
-  // down — so no leak on a supported host. Add a generous cap only if an
-  // unsupported host is ever seen spinning it forever.
-  return () => observer.disconnect()
+  // ponytail: the observer self-disconnects on the first match; the timer above
+  // only warns (never disconnects), so a very-late composer still hooks.
+  // onConversationChange/unload also tear it down — so no leak on a supported host.
+  return () => { clearTimeout(staleWarning); observer.disconnect() }
 }
 
 const adapter = getAdapter()
@@ -100,7 +114,7 @@ if (adapter) {
     // Holds the fully merged (regex + NER) aliased set, keyed to the exact text
     // it was computed for. The submit guard only trusts it when text matches;
     // otherwise it falls back to synchronous regex so it never races the pipeline.
-    let latestAliased: { text: string; detections: Detection[] } | null = null
+    let latestAliased: { text: string; detections: Detection[]; dropped: number } | null = null
 
     const reviewManager = new ReviewManager()
 
@@ -128,18 +142,23 @@ if (adapter) {
             return
           }
 
+          // Count of detections the model flagged but the offscreen aligner could
+          // not place in the source — these are NOT masked. Carried to the submit
+          // guard so we never silently send around them.
+          const dropped = response.dropped ?? 0
+
           const merged = combineDetections(regexDetections, response.detections, whitelist)
 
           // Assign aliases so highlights show [PERSON_1] style labels
           assignAliases(merged, safeAdapter.getConversationId(), safeAdapter.id)
             .then(aliased => {
               if (latestText !== text) return
-              latestAliased = { text, detections: aliased }
+              latestAliased = { text, detections: aliased, dropped }
               highlighter.update(text, aliased, (term) => { lastRightClickedTerm = term })
             })
             .catch(err => {
               console.warn('[PiiI] alias assignment failed:', err)
-              latestAliased = { text, detections: merged }
+              latestAliased = { text, detections: merged, dropped }
               highlighter.update(text, merged, (term) => { lastRightClickedTerm = term })
             })
         })
@@ -170,8 +189,13 @@ if (adapter) {
         alias: d => assignAliases(d, safeAdapter.getConversationId(), safeAdapter.id),
       })
 
-      if (detections.length === 0) {
-        // No PII detected — pass through natively
+      // Fail-safe: PII the model flagged for THIS text but the aligner couldn't
+      // place is unmasked. Even when nothing is shown for substitution, force the
+      // review panel so we never silently send around an unmasked value.
+      const droppedForText = latestAliased && latestAliased.text === text ? latestAliased.dropped : 0
+
+      if (detections.length === 0 && droppedForText === 0) {
+        // Nothing detected and nothing dropped — pass through natively
         triggerNativeSubmit()
         return
       }
@@ -221,6 +245,7 @@ if (adapter) {
           // User chose Cancel — close, send nothing, leave text in the input
           reviewManager.hide()
         },
+        droppedForText,
       )
     }
 
@@ -322,6 +347,14 @@ chrome.runtime.onMessage.addListener((msg: ContentInboundMessage, _sender, sendR
   if (msg.type === 'GET_LAST_RIGHTCLICKED_TERM') {
     sendResponse({ term: lastRightClickedTerm ?? null } satisfies RightClickedTermResponse)
     lastRightClickedTerm = null  // consumed - prevents stale re-use
+    return false
+  }
+  if (msg.type === 'GET_SELECTED_TERM') {
+    // Hotkey path: whitelist whatever the user has selected in the page. Trim to
+    // drop stray whitespace from a double-click selection; empty → null so the
+    // background no-ops instead of adding a blank entry.
+    const term = (window.getSelection()?.toString() ?? '').trim()
+    sendResponse({ term: term || null } satisfies SelectedTermResponse)
     return false
   }
   return false

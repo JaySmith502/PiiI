@@ -15,7 +15,7 @@ export type BackgroundResponse =
   | { ok: true; data?: unknown }
   | { ok: false; error: string }
 
-export type NerResponse = { ok: true; detections: Detection[] } | { ok: false; error: string }
+export type NerResponse = { ok: true; detections: Detection[]; dropped?: number } | { ok: false; error: string }
 
 // Service worker → offscreen document (ML inference). Reply is a NerResponse.
 export type OffscreenRequest = { type: 'OFFSCREEN_NER'; text: string }
@@ -24,6 +24,7 @@ export type OffscreenRequest = { type: 'OFFSCREEN_NER'; text: string }
 export type ContentInboundMessage =
   | { type: 'GET_CURRENT_ALIASES' }
   | { type: 'GET_LAST_RIGHTCLICKED_TERM' }
+  | { type: 'GET_SELECTED_TERM' }
 
 // Reply to GET_CURRENT_ALIASES (popup → content)
 export type CurrentAliasesResponse =
@@ -32,3 +33,6 @@ export type CurrentAliasesResponse =
 
 // Reply to GET_LAST_RIGHTCLICKED_TERM (service worker → content)
 export type RightClickedTermResponse = { term: string | null }
+
+// Reply to GET_SELECTED_TERM (service worker → content, hotkey path)
+export type SelectedTermResponse = { term: string | null }

@@ -15,6 +15,9 @@ interface ReviewPanelProps {
   onDismiss: () => void
   // Close without sending anything — leaves the user's text in the input.
   onCancel: () => void
+  // Count of values the model flagged but could not be located/masked. When > 0
+  // the panel shows a warning and renders even if there are no editable rows.
+  warningCount?: number
 }
 
 function truncate(text: string, maxLen = 20): string {
@@ -26,7 +29,7 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', color: C.ink500, margin: '0 0 9px',
 }
 
-export function ReviewPanel({ detections, onConfirm, onDismiss, onCancel }: ReviewPanelProps) {
+export function ReviewPanel({ detections, onConfirm, onDismiss, onCancel, warningCount = 0 }: ReviewPanelProps) {
   const [decisions, setDecisions] = useState<Decision[]>(() =>
     detections.map(d => ({ detection: d, accepted: true, alias: d.alias }))
   )
@@ -101,7 +104,7 @@ export function ReviewPanel({ detections, onConfirm, onDismiss, onCancel }: Revi
     )
   }
 
-  if (detections.length === 0) {
+  if (detections.length === 0 && warningCount === 0) {
     return null
   }
 
@@ -158,13 +161,34 @@ export function ReviewPanel({ detections, onConfirm, onDismiss, onCancel }: Revi
           </div>
           <span style={{
             width: '9px', height: '9px', flex: 'none', borderRadius: '999px',
-            background: pending > 0 ? C.red : C.green,
+            background: (pending > 0 || warningCount > 0) ? C.red : C.green,
           }} />
         </div>
 
         {/* Body */}
         <div style={{ padding: '18px 16px 16px' }}>
-          <p style={labelStyle}>// Detected &middot; {decisions.length} {decisions.length === 1 ? 'item' : 'items'}</p>
+          {warningCount > 0 && (
+            <div
+              role="alert"
+              style={{
+                display: 'flex', gap: '9px', alignItems: 'flex-start',
+                padding: '10px 12px', marginBottom: decisions.length > 0 ? '14px' : '4px',
+                border: `2px solid ${C.red}`, borderRadius: '6px', background: C.paper2,
+              }}
+            >
+              <span aria-hidden style={{ fontSize: '14px', lineHeight: '18px' }}>⚠</span>
+              <span style={{ fontSize: '13px', lineHeight: '18px', color: C.ink700 }}>
+                <strong>
+                  {warningCount} {warningCount === 1 ? 'value was' : 'values were'} flagged as possible PII but could not be located precisely
+                </strong>
+                {' '}— {warningCount === 1 ? 'it' : 'they'} will <strong>not</strong> be masked. Review your message, or edit it before sending.
+              </span>
+            </div>
+          )}
+
+          {decisions.length > 0 && (
+            <p style={labelStyle}>// Detected &middot; {decisions.length} {decisions.length === 1 ? 'item' : 'items'}</p>
+          )}
 
           {/* Detection rows */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

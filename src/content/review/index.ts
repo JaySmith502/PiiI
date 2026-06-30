@@ -15,6 +15,7 @@ export class ReviewManager {
     onConfirm: (decisions: Decision[]) => void,
     onDismiss: () => void,
     onCancel: () => void,
+    warningCount = 0,
   ): void {
     this.hide()
 
@@ -25,7 +26,7 @@ export class ReviewManager {
 
     this.root = createRoot(container)
     this.root.render(
-      createElement(ReviewPanel, { detections, onConfirm, onDismiss, onCancel })
+      createElement(ReviewPanel, { detections, onConfirm, onDismiss, onCancel, warningCount })
     )
   }
 

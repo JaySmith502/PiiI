@@ -7,7 +7,6 @@ function getInputElement(): HTMLElement | null {
     'textarea',
     'div[contenteditable="true"]',
   ])
-  if (!el) console.warn('[PiiI] perplexity: no input element matched any selector')
   return el
 }
 

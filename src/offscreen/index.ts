@@ -1,6 +1,7 @@
 import { pipeline, env } from '@huggingface/transformers'
 import type { Detection } from '../types'
 import type { OffscreenRequest, NerResponse } from '../background/messages'
+import { foldWithMap, alnumRuns, entityTokens, locateEntity } from './align'
 
 env.allowLocalModels = false
 // Serve ort-wasm runtime files from the extension itself (dist/ort-wasm/) so the
@@ -133,9 +134,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     .then(ner => ner(text, { aggregation_strategy: 'simple' }) as Promise<NerEntity[]>)
     .then(raw => {
       const detections: Detection[] = []
-      // Walk a cursor so repeated words (e.g. two names) resolve to distinct
-      // spans in order rather than all matching the first occurrence.
-      let searchFrom = 0
+      // Pre-fold the source once, then align each decoded entity onto its
+      // alphanumeric runs. `runCursor` advances so repeated values map to
+      // distinct occurrences instead of all matching the first.
+      const { folded, map } = foldWithMap(text)
+      const runs = alnumRuns(folded, map, text.length)
+      let runCursor = 0
+      let dropped = 0
       for (const entity of raw) {
         if (IGNORED_ENTITIES.has(entity.entity_group)) continue
         const category = ENTITY_TO_CATEGORY[entity.entity_group]
@@ -144,28 +149,33 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           continue
         }
 
-        // 'simple' aggregation gives the decoded word but no offsets — find it.
-        const word = entity.word.trim()
-        let start = entity.start
-        let end = entity.end
-        if (typeof start !== 'number' || typeof end !== 'number') {
-          const idx = word ? text.indexOf(word, searchFrom) : -1
-          if (idx === -1) {
-            console.warn(`[PiiI offscreen] could not locate "${word}" in text`)
-            continue
-          }
-          start = idx
-          end = idx + word.length
-          searchFrom = end
+        // Trust real offsets if a future transformers.js version provides them;
+        // otherwise recover them by aligning the decoded word to the source.
+        let span: [number, number] | null = null
+        if (typeof entity.start === 'number' && typeof entity.end === 'number') {
+          span = [entity.start, entity.end]
+        } else {
+          const hit = locateEntity(entityTokens(entity.word), runs, runCursor)
+          if (hit) { span = hit.span; runCursor = hit.nextCursor }
+        }
+
+        if (!span) {
+          // Unplaceable: the model flagged PII we cannot position, so we cannot
+          // mask it. Count it so the miss is observable, never silent.
+          dropped++
+          continue
         }
 
         detections.push({
-          span: [start, end],
-          text: text.slice(start, end),
+          span,
+          text: text.slice(span[0], span[1]),
           category,
           confidence: Math.round(entity.score * 100) / 100,
           alias: '',
         })
+      }
+      if (dropped > 0) {
+        console.warn(`[PiiI offscreen] ${dropped} detection(s) could not be aligned to the source and were NOT masked`)
       }
       // Snap each span to full-word boundaries first, then join multi-part entities.
       const snapped = detections.map(d => {
@@ -174,7 +184,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           ? d
           : { ...d, span, text: text.slice(span[0], span[1]) }
       })
-      sendResponse({ ok: true, detections: coalesceMultipart(snapped, text) } satisfies NerResponse)
+      sendResponse({ ok: true, detections: coalesceMultipart(snapped, text), dropped } satisfies NerResponse)
     })
     .catch(err => sendResponse({ ok: false, error: String(err) } satisfies NerResponse))
 

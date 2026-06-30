@@ -4,6 +4,7 @@ import type {
   NerResponse,
   ContentInboundMessage,
   RightClickedTermResponse,
+  SelectedTermResponse,
 } from './messages'
 import { getSettings, getWhitelist, getAliasMap, setAliasMap, appendAuditEntry, addToWhitelist } from './storage'
 import type { AliasMap } from '../types'
@@ -54,6 +55,31 @@ chrome.contextMenus.onClicked.addListener((_info, tab) => {
   }
 })
 
+// Hotkey path (Alt+Shift+A): mirror of the context-menu allow flow, but the
+// term comes from the page selection instead of a right-clicked highlight.
+// chrome.commands fires in the service worker and can't read the page, so we
+// ask the active tab's content script for window.getSelection(), then whitelist.
+chrome.commands.onCommand.addListener((command) => {
+  if (command !== 'allow-selection') return
+  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    if (!tab?.id) return
+    try {
+      chrome.tabs.sendMessage(
+        tab.id,
+        { type: 'GET_SELECTED_TERM' } satisfies ContentInboundMessage,
+        (response?: SelectedTermResponse) => {
+          if (chrome.runtime.lastError || !response?.term) return
+          addToWhitelist(response.term).catch(err =>
+            console.warn('[PiiI] addToWhitelist (hotkey) failed:', err)
+          )
+        }
+      )
+    } catch {
+      // content script not injected on this tab - no-op
+    }
+  })
+})
+
 chrome.runtime.onMessage.addListener((message: ContentToBackground, _sender, sendResponse) => {
   handleMessage(message, sendResponse).catch((err) => {
     sendResponse({ ok: false, error: String(err) })
@@ -71,8 +97,8 @@ async function handleMessage(
       sendResponse({ ok: true })
       break
     case 'RUN_NER': {
-      const detections = await runNer(message.text)
-      sendResponse({ ok: true, detections } as NerResponse)
+      const { detections, dropped } = await runNer(message.text)
+      sendResponse({ ok: true, detections, dropped } as NerResponse)
       break
     }
     case 'GET_ALIAS_MAP': {

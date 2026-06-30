@@ -6,7 +6,6 @@ function getInputElement(): HTMLElement | null {
     'rich-textarea div[contenteditable="true"]',
     'div[contenteditable="true"]',
   ])
-  if (!el) console.warn('[PiiI] gemini: no input element matched any selector')
   return el
 }
 

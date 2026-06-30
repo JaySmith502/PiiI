@@ -76,6 +76,16 @@ const manifest = defineManifest({
       '128': 'icons/icon128.png',
     },
   },
+  commands: {
+    'allow-selection': {
+      // Alt+Shift+A: avoids the DevTools triad (Ctrl+Shift+I/J, Cmd+Opt+I) and
+      // Firefox's Ctrl+Shift+K. On macOS the browser intercepts the registered
+      // command before the page, so Option+Shift+A does NOT insert a glyph in
+      // the composer. Users can rebind at chrome://extensions/shortcuts.
+      suggested_key: { default: 'Alt+Shift+A' },
+      description: 'Always allow the selected term (skip redaction)',
+    },
+  },
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module',
