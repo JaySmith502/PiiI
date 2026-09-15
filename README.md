@@ -116,6 +116,7 @@ Useful scripts:
 | `npm test` | Unit tests |
 | `npm run verify` | typecheck + tests + build |
 | `npm run package` | Build and produce the store-ready zip |
+| `npm run bundle:submission` | Gather that zip, the listing art and the store runbook into one folder |
 
 ## Usage
 
@@ -166,7 +167,9 @@ src/
   welcome/      first-run onboarding page
   ui/           shared styles and fonts
 scripts/
-  package.mjs   builds the Chrome Web Store archive from dist/
+  package.mjs            builds the Chrome Web Store archive from dist/
+  validate-extension.mjs loads the built extension into Chromium and asserts Chrome installs it
+  bundle-submission.mjs  gathers the upload zip, listing art and store runbook into one folder
 ```
 
 Fonts are self-hosted (`public/fonts/`), so the extension makes no remote font requests.
