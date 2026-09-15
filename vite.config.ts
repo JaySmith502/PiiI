@@ -78,6 +78,19 @@ const SITE_MATCHES = [
   'https://chat.deepseek.com/*',
 ]
 
+// web_accessible_resources does NOT accept the full match-pattern grammar the
+// content script uses: Chrome requires every entry to be host-level, with a
+// literal '/*' path. A path-bearing pattern such as 'https://x.com/i/grok*' is
+// valid for content_scripts but makes Chrome reject the ENTIRE manifest with
+// "Invalid value for 'web_accessible_resources[0]'. Invalid match pattern." —
+// the extension then fails to install, with no visible error to the user.
+// So the WAR list is derived from SITE_MATCHES by collapsing each pattern to its
+// origin. This cannot widen what the extension can *read*: WAR only controls
+// which pages may load the listed files, it grants no host access.
+const WAR_MATCHES = [
+  ...new Set(SITE_MATCHES.map((pattern) => `${new URL(pattern).origin}/*`)),
+]
+
 const manifest = defineManifest({
   manifest_version: 3,
   name: 'PiiI',
@@ -135,8 +148,9 @@ const manifest = defineManifest({
       // Loaded by the content script (chrome.runtime.getURL) when scanning a PDF
       // attachment, so it only needs to be reachable from the supported chat
       // sites. '<all_urls>' here would let any page on the web probe the bundle.
+      // WAR_MATCHES, not SITE_MATCHES — see the note above.
       resources: ['pdf.worker.min.mjs'],
-      matches: SITE_MATCHES,
+      matches: WAR_MATCHES,
     },
   ],
 })

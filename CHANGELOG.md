@@ -5,7 +5,33 @@ All notable changes to PiiI are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.4] — 2026-09-15
+
+### Fixed
+
+- **Chrome refused to install v1.0.3.** The `web_accessible_resources` list
+  introduced in 1.0.3 was copied straight from the content-script match list,
+  which included the path-bearing pattern `https://x.com/i/grok*`. Chrome's
+  `web_accessible_resources` grammar only accepts host-level patterns with a
+  literal `/*` path, so it rejected the whole manifest with an "Invalid match
+  pattern" error and the extension would not install at all — silently, from the
+  user's point of view. The worker list is now derived by collapsing each
+  content-script pattern to its origin, which cannot widen what the extension can
+  read (the field only controls which pages may load the listed files; it grants
+  no host access).
+- Corrected a documentation error in the same commit: the released 1.0.3 archive
+  was confirmed uninstallable by loading it into Chromium, so 1.0.4 supersedes it.
+
+### Added
+
+- `scripts/validate-extension.mjs` — loads the built package into real Chromium
+  and asserts that the service worker registers and the popup renders. Unit tests
+  and `tsc` both pass on a manifest Chrome refuses; this is the only check that
+  catches an uninstallable build. It now runs as part of `npm run package`, so no
+  future archive can be built without being Chrome-validated.
+- `scripts/screenshots.mjs` — captures the store screenshot set (1280×800) by
+  driving the shipped content script against a local chat-composer fixture, with
+  self-verification of size, colour count and luminance for each capture.
 
 ### Documentation
 
@@ -83,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Attachment scanning for `.txt`, `.csv`, `.md`, `.log`, `.json`, `.docx`, `.pdf`.
 - Support for ChatGPT, Claude, Gemini, Copilot, Perplexity, and DeepSeek.
 
-[Unreleased]: https://github.com/JaySmith502/PiiI/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/JaySmith502/PiiI/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/JaySmith502/PiiI/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/JaySmith502/PiiI/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/JaySmith502/PiiI/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/JaySmith502/PiiI/compare/v1.0.0...v1.0.1

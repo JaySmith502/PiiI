@@ -1,6 +1,6 @@
 {
   "name": "piii",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "type": "module",
   "description": "Open-source AI data-loss prevention — detects and masks PII before it leaves your browser.",
@@ -17,7 +17,9 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc && vite build",
     "verify": "npm run typecheck && npm run test && npm run build",
-    "package": "npm run build && node scripts/package.mjs",
+    "verify:extension": "node scripts/validate-extension.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "package": "npm run build && node scripts/validate-extension.mjs && node scripts/package.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -36,6 +38,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.17",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",

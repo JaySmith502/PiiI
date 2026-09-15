@@ -1,8 +1,8 @@
 # Chrome Web Store — submission package
 
-Everything needed to publish **PiiI v1.0.3**. Copy-paste from the fenced blocks.
+Everything needed to publish **PiiI v1.0.4**. Copy-paste from the fenced blocks.
 
-- **Artifact:** `release/piii-1.0.3.zip`
+- **Artifact:** `release/piii-1.0.4.zip`
 - **Privacy policy URL:** `https://github.com/JaySmith502/PiiI/blob/main/PRIVACY.md`
 - **Support URL:** `https://github.com/JaySmith502/PiiI/issues`
 - **Homepage URL:** `https://github.com/JaySmith502/PiiI`
@@ -99,7 +99,7 @@ Open source under the MIT licence.
 | Asset | Requirement | Status |
 |---|---|---|
 | Store icon | 128×128 PNG | `icons/icon128.png` ✅ |
-| Screenshots | 1–5, 1280×800 or 640×400 | ❌ **must be captured** — see §5 |
+| Screenshots | 1–5, 1280×800 or 640×400 | ✅ 4 captured in `store/screenshots/` — see §5 |
 | Small promo tile | 440×280 PNG (optional, needed to be featured) | ❌ not produced |
 
 ---
@@ -235,14 +235,22 @@ minute; on a slow one it will take considerably longer.
 
 ## 4. Pre-submission checklist
 
-- [x] `manifest.json` at the archive root, version `1.0.3`
+- [x] `manifest.json` at the archive root, version `1.0.4`
 - [x] Version is a plain `x.y.z` (the store rejects a `-beta` suffix)
 - [x] `web_accessible_resources` scoped to chat domains — no `<all_urls>`
+- [x] Every `web_accessible_resources` match is origin-level with a literal `/*`
+      path. **v1.0.3 shipped `https://x.com/i/grok*` here and Chrome refused the
+      entire manifest — the package would not install.** Chrome's WAR grammar is
+      stricter than the content-script grammar, and a violation is silent to the
+      user. Never copy the content-script match list into WAR; collapse each
+      pattern to its origin.
+- [x] Package loads in real Chromium (`npm run verify:extension` — worker
+      registers, popup renders). This runs automatically inside `npm run package`.
 - [x] No `host_permissions`
 - [x] Privacy policy written and public
 - [x] Under the 2 GB package limit; only production assets in the archive
+- [x] Screenshots captured (§5) — `store/screenshots/`, 4 × 1280×800
 - [ ] $5 developer registration paid (one-off)
-- [ ] Screenshots captured (§5)
 - [ ] Store listing text pasted
 - [ ] Privacy practices tab completed (§2)
 - [ ] Trader / non-trader declaration completed (required for EU distribution)
@@ -252,19 +260,38 @@ minute; on a slow one it will take considerably longer.
 
 ## 5. Screenshots
 
-Required: **1–5 images at 1280×800** (640×400 also accepted). Capture the review
-panel, the popup audit log, and the welcome/permissions page.
+**Captured.** Four images, all exactly 1280×800, in `store/screenshots/`. Upload
+them in this order — the first is the one the listing leads with.
 
-Suggested set:
+| # | File | Shows |
+|---|---|---|
+| 1 | `01-detections-in-composer.png` | PiiI flagging email, phone, card, SSN and URL inline in the composer, before send |
+| 2 | `02-review-panel.png` | The review panel with all 5 detections and their suggested aliases — **the money shot** |
+| 3 | `03-popup-audit-log.png` | Toolbar popup: master toggle, audit log, clear-data controls |
+| 4 | `04-welcome.png` | Welcome page: what PiiI detects, and the five permissions |
 
-1. The redaction review panel open over a ChatGPT composer with the four detections
-   from the test message above — this is the money shot and should be first.
-2. The toolbar popup: master toggle, audit log summary, clear-data controls.
-3. The welcome page listing what PiiI detects and the five permissions.
+Regenerate any time with:
 
-The popup and welcome page can be captured from the built extension. The review
-panel needs a real chat page, since the content script only runs on those nine
-domains.
+```
+npm run build && npm run screenshots
+```
+
+The script loads the **shipped build** into Chromium and drives the real content
+script against a local fixture page standing in for the chat composer — the
+detectors, highlight overlay, review panel and popup are the actual shipped code.
+Only the host page markup is a fixture, because that page is not ours. Captures
+are self-verified for size, colour count and luminance, and the script exits
+non-zero if any comes back blank, black or mis-sized.
+
+The first-run model download is blocked during capture so it does not run over the
+network; pattern-rule detection (email, phone, card, SSN, URL) is synchronous and
+needs no model, which is why the panel shows five rows. Once the model is cached,
+name and address rows appear as well.
+
+Note for the listing: screenshots 1 and 2 are a real render of the interface but
+against a representative ChatGPT-like page, not a live logged-in session. That is
+standard practice for extension listings and nothing in the images is fabricated
+about PiiI's own UI.
 
 ---
 
