@@ -25,7 +25,7 @@ export function combineDetections(
   return merged.filter(d => !folded.has(d.text.toLowerCase()))
 }
 
-// ponytail: remove or strip via build before prod
+// Note: remove or strip via build before prod
 if (import.meta.env.DEV) {
   const TEST_TEXT =
     'Email me at test@example.com or call (555) 867-5309. My CC is 4532015112830366. API key: sk-abc123XYZ789verylongkeyhere'

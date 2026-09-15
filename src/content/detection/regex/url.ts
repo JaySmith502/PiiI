@@ -1,8 +1,11 @@
 import type { Detection } from '../../../types'
 
-// Common TLDs for bare-domain matching
+// Curated list of common generic and country-code TLDs, used to spot bare
+// domains such as `example.com` that carry no scheme. Deduplicated — a repeated
+// alternative is harmless to the regex but is dead weight and a maintenance
+// hazard. Kept as a single string so it can be interpolated into the pattern.
 const COMMON_TLDS =
-  'com|net|org|io|gov|edu|co|uk|de|fr|au|ca|jp|cn|br|ru|it|es|nl|se|no|fi|dk|pl|cz|hu|ro|bg|hr|sk|si|ee|lv|lt|pt|gr|at|be|ch|lu|ie|is|nz|za|mx|ar|cl|pe|ve|co|in|sg|my|th|ph|id|vn|tw|kr|hk|ae|sa|ng|ke|gh|tz|ug|zm|zw|mz|ma|dz|tn|eg|sd|ly|tn|ao|cm|ci|sn|ml|bf|ne|td|cf|cg|ga|gn|gm|sl|lr|mr|er|so|dj|km|mg|mu|sc|cv|st|gw|gq|bi|rw|rw|bj|tg|bw|ls|sz|na|re|yt|pm|gp|mq|tf|wf|nc|pf|ck|nu|to|tv|ws|ki|fm|pw|mh|gu|mp|vi|pr|as|um|io|sh|ac|gg|je|im|gi|fo|pm|gl|aw|cw|bq|sx|mf|bl|gp|mq|re|yt|tf|wf|nc|pf|ck|nu'
+  'com|net|org|io|gov|edu|co|uk|de|fr|au|ca|jp|cn|br|ru|it|es|nl|se|no|fi|dk|pl|cz|hu|ro|bg|hr|sk|si|ee|lv|lt|pt|gr|at|be|ch|lu|ie|is|nz|za|mx|ar|cl|pe|ve|in|sg|my|th|ph|id|vn|tw|kr|hk|ae|sa|ng|ke|gh|tz|ug|zm|zw|mz|ma|dz|tn|eg|sd|ly|ao|cm|ci|sn|ml|bf|ne|td|cf|cg|ga|gn|gm|sl|lr|mr|er|so|dj|km|mg|mu|sc|cv|st|gw|gq|bi|rw|bj|tg|bw|ls|sz|na|re|yt|pm|gp|mq|tf|wf|nc|pf|ck|nu|to|tv|ws|ki|fm|pw|mh|gu|mp|vi|pr|as|um|sh|ac|gg|je|im|gi|fo|gl|aw|cw|bq|sx|mf|bl'
 
 export function detectUrl(text: string): Detection[] {
   const results: Detection[] = []

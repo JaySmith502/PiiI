@@ -13,7 +13,7 @@ function getInputElement(): HTMLElement | null {
 function getConversationId(): string {
   const segments = window.location.pathname.split('/').filter(Boolean)
   if (segments.length > 0) return segments[segments.length - 1]
-  // ponytail: stable id for new chats — see chatgpt.ts
+  // Note: stable id for new chats — see chatgpt.ts
   return `deepseek:${window.location.pathname}`
 }
 

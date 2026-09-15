@@ -76,14 +76,14 @@ function waitForInput(adapter: PlatformAdapter, cb: (el: HTMLElement) => void): 
     attributes: true,
     attributeFilter: ['contenteditable', 'class', 'role'],
   })
-  // ponytail: the observer self-disconnects on the first match; the timer above
+  // Note: the observer self-disconnects on the first match; the timer above
   // only warns (never disconnects), so a very-late composer still hooks.
   // onConversationChange/unload also tear it down — so no leak on a supported host.
   return () => { clearTimeout(staleWarning); observer.disconnect() }
 }
 
 const adapter = getAdapter()
-// ponytail: one-line load probe — distinguishes "script never injected" from
+// Note: one-line load probe — distinguishes "script never injected" from
 // "injected but adapter found no input". Shows in the PAGE tab console, not offscreen.
 console.info('[PiiI] loaded on', window.location.hostname, '— adapter:', adapter?.id ?? 'NONE (unsupported host)')
 if (adapter) {
@@ -186,7 +186,7 @@ if (adapter) {
     const debouncedRun = debounce(runAndUpdate, 300)
     // Both paste and keyup use the same debounced runner.
     // setTimeout 0 on paste: lets the DOM update before we read the text.
-    // ponytail: one debounced fn for both events — concurrent NER calls prevented
+    // Note: one debounced fn for both events — concurrent NER calls prevented
     const onPaste = () => setTimeout(debouncedRun, 0)
 
     // Skip-flag prevents re-intercepting our own synthetic submit keydown
@@ -274,7 +274,7 @@ if (adapter) {
         sendButton.click()
       } else {
         // Fallback: synthetic Enter keydown (isTrusted=false, may not work on all platforms)
-        // ponytail: most React-based AI platforms process this; add per-platform adapter method in Phase 5 if needed
+        // Note: most React-based AI platforms process this; add per-platform adapter method in Phase 5 if needed
         inputEl.dispatchEvent(
           new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
         )

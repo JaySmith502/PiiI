@@ -14,7 +14,7 @@ export function interceptSubmit(
   shouldSkip: () => boolean,
   sendButtonSelector: string = DEFAULT_SEND_BUTTON,
 ): () => void {
-  // ponytail: listen at document capture, not on inputEl. React attaches its
+  // Note: listen at document capture, not on inputEl. React attaches its
   // capture handlers on the root container (above inputEl), so an element-level
   // capture listener fires AFTER React has already submitted. document is the
   // top of the capture phase, so it wins. stopImmediatePropagation blocks

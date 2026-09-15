@@ -55,7 +55,7 @@ export function makeConversationChangeListener(
       observer = new MutationObserver(check)
       observer.observe(titleEl, { subtree: true, characterData: true, childList: true })
     }
-    // ponytail: no documentElement fallback — too expensive; popstate+pushState patch covers SPA
+    // Note: no documentElement fallback — too expensive; popstate+pushState patch covers SPA
 
     return () => {
       window.removeEventListener('popstate', check)

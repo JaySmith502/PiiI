@@ -9,7 +9,7 @@ function getInputElement(): HTMLElement | null {
     'div[contenteditable="true"]',
   ])
   if (el) return el
-  // ponytail: one-shot isolated-world diagnostic — page-console probes run in the
+  // Note: one-shot isolated-world diagnostic — page-console probes run in the
   // page world and can't show what the content script sees. Remove once Copilot works.
   if (!copilotDiagLogged) {
     copilotDiagLogged = true
@@ -38,7 +38,7 @@ function getConversationId(): string {
   const segments = window.location.pathname.split('/').filter(Boolean)
   if (segments.length > 0) return segments[segments.length - 1]
 
-  // ponytail: stable id for new chats — see chatgpt.ts
+  // Note: stable id for new chats — see chatgpt.ts
   return `copilot:${window.location.pathname}`
 }
 

@@ -12,7 +12,7 @@ function getInputElement(): HTMLElement | null {
 
 function getConversationId(): string {
   const match = window.location.pathname.match(/^\/c\/([^/]+)/)
-  // ponytail: stable id for new chats — Date.now() caused spurious
+  // Note: stable id for new chats — Date.now() caused spurious
   // conversation-change teardowns that unhooked detection.
   return match ? match[1] : `chatgpt:${window.location.pathname}`
 }

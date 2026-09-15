@@ -1,6 +1,6 @@
 {
   "name": "piii",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "private": true,
   "type": "module",
   "description": "Open-source AI data-loss prevention — detects and masks PII before it leaves your browser.",
@@ -10,7 +10,7 @@
     "url": "https://github.com/JaySmith502/PiiI.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "dev": "vite build --watch",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
     "mammoth": "^1.12.0",
-    "pdfjs-dist": "^6.0.227",
+    "pdfjs-dist": "^6.2.108",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -36,7 +36,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.33",
+    "postcss": "^8.5.26",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^8.0.16",

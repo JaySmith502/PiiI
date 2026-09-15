@@ -2,7 +2,7 @@ import type { PlatformAdapter } from './types'
 import { makeConversationChangeListener, firstMatch, lastMatch } from './shared'
 
 function getInputElement(): HTMLElement | null {
-  // ponytail: Grok is shelved as unsupported — its composer is unreachable from
+  // Note: Grok is shelved as unsupported — its composer is unreachable from
   // the content script's isolated world (see known-issues). Selectors kept
   // best-effort; adapter stays so detection turns on if Grok's DOM ever changes.
   return firstMatch([
@@ -17,7 +17,7 @@ function getConversationId(): string {
   // e.g. /i/grok or /chat/<id>
   const id = segments[segments.length - 1]
   if (id && id !== 'grok') return id
-  // ponytail: stable id for new chats — see chatgpt.ts
+  // Note: stable id for new chats — see chatgpt.ts
   return `grok:${window.location.pathname}`
 }
 

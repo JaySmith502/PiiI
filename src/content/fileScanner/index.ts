@@ -7,7 +7,7 @@ import { sendToBackground } from '../utils'
 import type { NerResponse } from '../../background/messages'
 import type { Detection } from '../../types'
 
-// ponytail: module-level flag - same pattern as skipNextSubmit in submit.ts
+// Note: module-level flag - same pattern as skipNextSubmit in submit.ts
 let releasing = false
 
 let activeRoot: ReturnType<typeof createRoot> | null = null

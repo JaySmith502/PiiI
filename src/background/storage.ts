@@ -61,7 +61,7 @@ export async function appendAuditEntry(entry: AuditEntry): Promise<void> {
   const result = await chrome.storage.local.get(KEYS.auditLog)
   const log: AuditEntry[] = result[KEYS.auditLog] ?? []
   log.push(entry)
-  // ponytail: cap at 2000 entries; CSV export gets everything before trimming
+  // Note: cap at 2000 entries; CSV export gets everything before trimming
   const trimmed = log.length > 2000 ? log.slice(log.length - 2000) : log
   await chrome.storage.local.set({ [KEYS.auditLog]: trimmed })
 }

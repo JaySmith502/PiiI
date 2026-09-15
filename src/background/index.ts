@@ -33,7 +33,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 })
 
 // Warm up NER model in background on service worker start
-// ponytail: fire-and-forget; errors are non-fatal (user just gets slower first detection)
+// Note: fire-and-forget; errors are non-fatal (user just gets slower first detection)
 //
 // Skipped while protection is paused: the model is a large one-time download and
 // paying for it behind the user's back contradicts "paused". Resuming warms it

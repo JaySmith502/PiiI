@@ -56,7 +56,7 @@ export async function assignAliases(
         platform,
         aliases,
       }).catch((err: unknown) => {
-        // ponytail: write failure — aliases work this session but won't persist; log and continue
+        // Note: write failure — aliases work this session but won't persist; log and continue
         console.warn('[PiiI] alias map write failed:', err)
       })
     }

@@ -35,6 +35,23 @@ The model weights are downloaded once from the Hugging Face CDN on first run and
 - **One-time model download.** The NER weights are fetched from the Hugging Face CDN the first time you use it, then cached. Nothing about your prompts is sent in that request.
 - **Local storage only.** The alias map, audit log, and whitelist live in `chrome.storage.local` on your machine.
 
+The full, store-listing privacy policy is in [PRIVACY.md](PRIVACY.md).
+
+## Changelog
+
+Release history lives in [CHANGELOG.md](CHANGELOG.md).
+
+## Security
+
+PiiI handles untrusted input by design — prompts, and files you attach — so its own attack surface matters.
+
+- **Dependency audit.** `npm audit` reports four high-severity advisories in `adm-zip` and `sharp`. Both arrive through `onnxruntime-node`, a Node-only optional dependency of `@huggingface/transformers`; the extension runs [`onnxruntime-web`](https://www.npmjs.com/package/onnxruntime-web) (WASM) instead. Neither package, nor `libvips`, appears in the built `dist/` bundle — they are build-time only and ship to nobody. Verified by grepping the production bundles. No fix is available upstream at this time.
+- **Document parsers are kept current.** A malformed `.pdf` or `.docx` is the most realistic attack vector here, so `pdfjs-dist` and `@xmldom/xmldom` (via `mammoth`) are tracked and updated as advisories land.
+- **Fail-closed file scanning.** A file that cannot be parsed is blocked rather than passed through unscanned.
+- **Narrow host permissions.** The content script is declared only for the supported chat domains listed in `manifest.json`; it is never injected on `<all_urls>`. The one `<all_urls>` entry in the manifest is under `web_accessible_resources` and exposes a single static file, `pdf.worker.min.mjs`, so the PDF parser can be loaded into the page — it grants no access to page content or user data.
+
+Found something? Please open a [security issue](https://github.com/JaySmith502/PiiI/issues/new) or contact the maintainer directly.
+
 ## Supported platforms
 
 | Platform   | Domain                       | Status    |
@@ -73,7 +90,7 @@ Files are capped at 50,000 characters and the scan is fail-closed: if a file can
 
 ### From source
 
-Requirements: Node 18+ and Chrome 120+.
+Requirements: **Node 22.13+** and Chrome 120+. (`pdfjs-dist`, used for `.pdf` scanning, requires Node 22.13 or 24+ — older versions fail the build.)
 
 ```bash
 git clone https://github.com/JaySmith502/PiiI.git
@@ -137,14 +154,23 @@ Open the popup → **Audit log** → **CSV**. The log records the platform, the 
 
 ```
 src/
-  background/   service worker, NER bridge, storage, messaging
+  background/   service worker, NER bridge, storage, messaging, model status
   offscreen/    ONNX NER pipeline (runs the model)
   content/      content script, platform adapters, detection, substitution
     adapters/   one file per platform (selectors + send logic)
     detection/  regex detectors + merge
     fileScanner/ attachment extraction and scanning
-  popup/        toolbar UI (alias map, audit log, whitelist)
+    highlight/  detection overlays
+    review/     redaction review panel
+  popup/        toolbar UI (alias map, audit log, whitelist, model health)
+  welcome/      first-run onboarding page
+  ui/           shared styles and fonts
+scripts/
+  package.mjs   builds the Chrome Web Store archive from dist/
 ```
+
+Fonts are self-hosted (`public/fonts/`), so the extension makes no remote font requests.
+The ONNX runtime and the PDF worker are bundled; only the NER model weights are fetched on first run.
 
 ## License
 

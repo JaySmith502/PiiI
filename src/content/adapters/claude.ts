@@ -11,7 +11,7 @@ function getInputElement(): HTMLElement | null {
 
 function getConversationId(): string {
   const match = window.location.pathname.match(/^\/chat\/([^/]+)/)
-  // ponytail: stable id for unsaved/new chats. Date.now() returned a fresh
+  // Note: stable id for unsaved/new chats. Date.now() returned a fresh
   // value every call, so the conversation-change detector saw a "change" on
   // every title mutation and kept tearing down the input hook — nothing
   // flagged on a brand-new chat. Pathname is stable until the chat is saved.

@@ -12,7 +12,7 @@ function getInputElement(): HTMLElement | null {
 function getConversationId(): string {
   // Gemini uses paths like /app/<id>
   const match = window.location.pathname.match(/^\/app\/([^/]+)/)
-  // ponytail: stable id for new chats — see chatgpt.ts
+  // Note: stable id for new chats — see chatgpt.ts
   return match ? match[1] : `gemini:${window.location.pathname}`
 }
 

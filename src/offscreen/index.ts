@@ -45,7 +45,7 @@ class NerPipeline {
   static async get(): Promise<any> {
     if (this.instance) return this.instance
     if (this.loading) return this.loading
-    // ponytail: aggregation_strategy must be passed at CALL time, not here —
+    // Note: aggregation_strategy must be passed at CALL time, not here —
     // pipeline() only takes model-load options, so it was silently ignored and
     // the pipeline ran in 'none' mode (raw subword tokens, `.entity` field) with
     // no `.entity_group`, dropping every detection.
