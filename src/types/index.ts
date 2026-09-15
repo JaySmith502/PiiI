@@ -35,6 +35,8 @@ export interface WhitelistEntry {
 }
 
 export interface ExtensionSettings {
+  // Master switch. When false the extension is fully dormant on every page: no
+  // detection, no highlighting, no submit interception. The whitelist lives in
+  // its own storage key (see background/storage.ts), not here.
   enabled: boolean
-  whitelist: string[]  // terms the user has whitelisted
 }

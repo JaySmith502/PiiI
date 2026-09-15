@@ -7,9 +7,22 @@ const KEYS = {
   aliasMap: (conversationId: string) => `piiii:alias:${conversationId}`,
 } as const
 
+// Protection is ON for a fresh install: a data-loss-prevention tool that starts
+// disabled protects nobody. The user opts out, never in.
+export const DEFAULT_SETTINGS: ExtensionSettings = { enabled: true }
+
 export async function getSettings(): Promise<ExtensionSettings> {
   const result = await chrome.storage.local.get(KEYS.settings)
-  return result[KEYS.settings] ?? { enabled: true, whitelist: [] }
+  const stored = result[KEYS.settings] as Partial<ExtensionSettings> | undefined
+  // Spread over defaults so a partial or legacy object can never leave `enabled`
+  // undefined — callers test it for truthiness, and undefined would silently read
+  // as "paused" and disable protection.
+  return { ...DEFAULT_SETTINGS, ...(stored ?? {}) }
+}
+
+export async function setEnabled(enabled: boolean): Promise<void> {
+  const current = await getSettings()
+  await chrome.storage.local.set({ [KEYS.settings]: { ...current, enabled } })
 }
 
 export async function getWhitelist(): Promise<WhitelistEntry[]> {
@@ -71,4 +84,16 @@ export function whitelistFromChange(
 ): WhitelistEntry[] | null {
   if (area !== 'local' || !changes[KEYS.whitelist]) return null
   return (changes[KEYS.whitelist].newValue as WhitelistEntry[] | undefined) ?? []
+}
+
+// Same contract as whitelistFromChange, for the master switch. Returns the
+// effective settings (defaults merged) when the settings key changed, else null.
+// A cleared/removed key resolves to the defaults, i.e. protection back on.
+export function settingsFromChange(
+  area: string,
+  changes: Record<string, chrome.storage.StorageChange>,
+): ExtensionSettings | null {
+  if (area !== 'local' || !changes[KEYS.settings]) return null
+  const next = changes[KEYS.settings].newValue as Partial<ExtensionSettings> | undefined
+  return { ...DEFAULT_SETTINGS, ...(next ?? {}) }
 }

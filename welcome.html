@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PiiI — setup</title>
+    <!-- Opened once after install from the service worker (chrome.runtime.getURL).
+         Bundled locally like the popup: no external font, style or script. -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #faf9f4;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/welcome/index.tsx"></script>
+  </body>
+</html>

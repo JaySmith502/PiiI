@@ -28,6 +28,9 @@ async function _doEnsure(): Promise<void> {
   })
 }
 
+// Re-exported so the service worker has a single import for model concerns.
+export { getModelStatus } from './modelStatus'
+
 export async function runNer(text: string): Promise<{ detections: Detection[]; dropped: number }> {
   if (!text.trim()) return { detections: [], dropped: 0 }
   await ensureOffscreen()
@@ -43,4 +46,16 @@ export async function runNer(text: string): Promise<{ detections: Detection[]; d
 export function warmUp(): void {
   // Creating the offscreen doc triggers NerPipeline warm-up on its own load
   ensureOffscreen().catch(err => console.warn('[PiiI] offscreen init failed:', err))
+}
+
+// Re-attempt after a failed model load (popup "Retry"). The offscreen document
+// reports progress back via ModelStatusReport messages, so there is nothing to
+// return here beyond confirming the request was dispatched.
+export async function retryModel(): Promise<void> {
+  await ensureOffscreen()
+  try {
+    await chrome.runtime.sendMessage({ type: 'OFFSCREEN_RETRY' } satisfies OffscreenRequest)
+  } catch (err) {
+    console.warn('[PiiI] model retry failed:', err)
+  }
 }

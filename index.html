@@ -4,10 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PiiI</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=JetBrains+Mono:wght@400;700&family=Jost:wght@800;900&display=swap" />
-    <style>html,body{margin:0;background:#FAF9F4;}</style>
+    <!-- No external stylesheet, font, or script here: this page renders with
+         only what ships inside the extension package (see src/ui/fonts.css). -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #faf9f4;
+        /* Reserve the popup's final width before React mounts so the browser's
+           popup frame does not resize on open. */
+        width: 340px;
+        min-height: 180px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

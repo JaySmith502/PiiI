@@ -1,6 +1,7 @@
 import type { Detection, PlatformId, AuditEntry } from '../types'
+import type { ModelStatus } from './modelStatus'
 
-// Messages sent from content script → service worker
+// Messages sent from an extension page or content script → service worker
 export type ContentToBackground =
   | { type: 'PING' }
   | { type: 'RUN_NER'; text: string; conversationId: string }
@@ -9,6 +10,9 @@ export type ContentToBackground =
   | { type: 'LOG_AUDIT'; entry: AuditEntry }
   | { type: 'GET_SETTINGS' }
   | { type: 'GET_WHITELIST' }
+  // Model health (popup): read the current state, or ask for another load attempt.
+  | { type: 'GET_MODEL_STATUS' }
+  | { type: 'RETRY_MODEL' }
 
 // Responses from service worker → content script
 export type BackgroundResponse =
@@ -17,8 +21,14 @@ export type BackgroundResponse =
 
 export type NerResponse = { ok: true; detections: Detection[]; dropped?: number } | { ok: false; error: string }
 
-// Service worker → offscreen document (ML inference). Reply is a NerResponse.
-export type OffscreenRequest = { type: 'OFFSCREEN_NER'; text: string }
+// Service worker → offscreen document (ML inference). Reply is a NerResponse
+// for OFFSCREEN_NER; OFFSCREEN_RETRY answers with a NerResponse-shaped ack.
+export type OffscreenRequest =
+  | { type: 'OFFSCREEN_NER'; text: string }
+  | { type: 'OFFSCREEN_RETRY' }
+
+// Reply to GET_MODEL_STATUS / RETRY_MODEL (popup → service worker)
+export type ModelStatusResponse = { ok: true; data: ModelStatus } | { ok: false; error: string }
 
 // Messages sent TO the content script — from the popup and the service worker.
 export type ContentInboundMessage =

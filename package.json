@@ -1,11 +1,23 @@
 {
   "name": "piii",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "Open-source AI data-loss prevention — detects and masks PII before it leaves your browser.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JaySmith502/PiiI.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit",
     "build": "tsc && vite build",
+    "verify": "npm run typecheck && npm run test && npm run build",
+    "package": "npm run build && node scripts/package.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

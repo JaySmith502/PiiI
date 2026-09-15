@@ -1,6 +1,7 @@
 import { pipeline, env } from '@huggingface/transformers'
 import type { Detection } from '../types'
 import type { OffscreenRequest, NerResponse } from '../background/messages'
+import type { ModelStatusReport } from '../background/modelStatus'
 import { foldWithMap, alnumRuns, entityTokens, locateEntity } from './align'
 
 env.allowLocalModels = false
@@ -55,8 +56,32 @@ class NerPipeline {
   }
 }
 
+// --- model health reporting -------------------------------------------------
+// The service worker cannot observe the pipeline directly, and a failed model
+// download used to be a console warning nobody reads. Report every load attempt
+// so the popup can show "ready" / "loading" / "failed + retry".
+function report(report: ModelStatusReport): void {
+  try {
+    chrome.runtime.sendMessage(report)
+  } catch {
+    // Service worker asleep or extension reloading — status is best-effort.
+  }
+}
+
+function loadModel(): Promise<void> {
+  report({ type: 'MODEL_LOADING' })
+  // A cached error clears NerPipeline.loading, so this genuinely re-attempts.
+  return NerPipeline.get()
+    .then(() => { report({ type: 'MODEL_READY' }) })
+    .catch(err => {
+      console.warn('[PiiI offscreen] model load failed:', err)
+      report({ type: 'MODEL_ERROR', error: err instanceof Error ? err.message : String(err) })
+      throw err
+    })
+}
+
 // Warm up on document load — model download starts as soon as offscreen doc is created
-NerPipeline.get().catch(err => console.warn('[PiiI offscreen] warm-up failed:', err))
+loadModel().catch(() => { /* already reported */ })
 
 // The NER model sometimes tags only part of a word — "Spring" of "Springfield" —
 // leaving the overlay cut mid-word. Expand a span outward over adjacent word
@@ -120,9 +145,19 @@ interface NerEntity {
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  // Popup's "Retry" after a failed download: re-run the load in this document,
+  // which is cheaper than tearing the offscreen document down and rebuilding it.
+  if (msg.type === 'OFFSCREEN_RETRY') {
+    loadModel().catch(() => { /* reported as MODEL_ERROR */ })
+    sendResponse({ ok: true })
+    return false
+  }
+
   if (msg.type !== 'OFFSCREEN_NER') return false
 
-  const { text } = msg as OffscreenRequest
+  // Narrow to the NER variant: the retry message returned above, so a cast to
+  // the whole union would hide a bad payload here.
+  const { text } = msg as Extract<OffscreenRequest, { type: 'OFFSCREEN_NER' }>
   if (!text.trim()) {
     sendResponse({ ok: true, detections: [] } satisfies NerResponse)
     return false

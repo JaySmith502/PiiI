@@ -1,8 +1,12 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
-import { copyFileSync, mkdirSync } from 'fs'
+import { copyFileSync, mkdirSync, readFileSync } from 'fs'
 import { join } from 'path'
+
+// Single source of truth for the version: package.json. The manifest and the
+// onboarding page footer both read it, so a release bump happens in one place.
+const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8')) as { version: string }
 
 // Prevents Vite from treating new URL("*.wasm", import.meta.url) as a bundled asset
 // (which would copy giant WASM binaries into dist/). The string replacement is dead
@@ -62,14 +66,23 @@ function ortBuildPlugin(): Plugin {
 const manifest = defineManifest({
   manifest_version: 3,
   name: 'PiiI',
-  version: '0.1.0',
+  version: pkg.version,
   description: 'Open-source AI data-loss prevention — detects and masks PII before it leaves your browser.',
+  // Store listing + support link for customers, and the oldest Chrome whose APIs
+  // PiiI actually relies on (chrome.runtime.getContexts landed in 116; the
+  // offscreen document and MV3 service-worker behaviour are stable from 120).
+  homepage_url: 'https://github.com/JaySmith502/PiiI',
+  minimum_chrome_version: '120',
+  // Every permission here is justified to the user on the onboarding page.
+  // Deliberately absent: tabs, webRequest, scripting, host_permissions — PiiI
+  // only ever touches the chat domains matched by its content script.
   permissions: ['storage', 'contextMenus', 'activeTab', 'alarms', 'offscreen'],
   content_security_policy: {
     extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
   },
   action: {
     default_popup: 'index.html',
+    default_title: 'PiiI — review before send',
     default_icon: {
       '16': 'icons/icon16.png',
       '48': 'icons/icon48.png',
@@ -130,7 +143,9 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       external: [/\.wasm$/],
-      input: { offscreen: 'offscreen.html' },
+      // offscreen.html: the hidden ML page. welcome.html: onboarding, opened in a
+      // tab once after install by the service worker.
+      input: { offscreen: 'offscreen.html', welcome: 'welcome.html' },
     },
   },
 })

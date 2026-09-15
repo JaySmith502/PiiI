@@ -1,5 +1,8 @@
 node_modules/
 dist/
+
+# packaged Chrome Web Store archive — attached to GitHub Releases, not committed
+release/
 *.local
 .env
 .env.*

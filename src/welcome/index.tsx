@@ -1,12 +1,11 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import '../ui/fonts.css'
-import './index.css'
-import { Popup } from './Popup'
+import { Welcome } from './Welcome'
 
 const root = document.getElementById('root')!
 createRoot(root).render(
   <React.StrictMode>
-    <Popup />
+    <Welcome />
   </React.StrictMode>
 )

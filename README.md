@@ -6,9 +6,9 @@ PiiI is an open-source Chrome (Manifest V3) extension that intercepts your promp
 Detection and machine-learning inference run entirely on your machine.
 No prompt text, and no detected data, is ever sent to a server.
 
-![PiiI redaction popup on ChatGPT](website/images/chatgpt_redact_message.png)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
+[![Local inference](https://img.shields.io/badge/inference-100%25%20on--device-2ea44f.svg)](#privacy-model)
 
 ## Why
 
@@ -46,17 +46,6 @@ The model weights are downloaded once from the Hugging Face CDN on first run and
 | Perplexity | `www.perplexity.ai`          | Supported |
 | DeepSeek   | `chat.deepseek.com`          | Supported |
 
-## Screenshots
-
-| | |
-|---|---|
-| ![ChatGPT redaction popup](website/images/chatgpt_redact_message.png) | ![Claude scanning a .docx](website/images/claude_docx.png) |
-| **ChatGPT** - redaction popup | **Claude** - `.docx` file scan |
-| ![Copilot pasted prompt](website/images/copilot_paste.png) | ![Gemini detection overlays](website/images/gemini_paste_overlays.png) |
-| **Copilot** - pasted prompt | **Gemini** - detection overlays |
-| ![Perplexity detection overlay](website/images/perplexity_overlay.png) | ![DeepSeek scanning a .docx](website/images/deepseek_docx.png) |
-| **Perplexity** - detection overlay | **DeepSeek** - `.docx` file scan |
-
 ## What it detects
 
 | Source | Categories |
@@ -72,29 +61,44 @@ PiiI scans files you attach for the same categories before they are sent.
 Supported types: `.txt`, `.csv`, `.md`, `.log`, `.json`, `.docx`, `.pdf`.
 Files are capped at 50,000 characters and the scan is fail-closed: if a file cannot be parsed, it is blocked rather than passed through unchecked.
 
-## Install (from source)
+## Install
 
-PiiI is not yet on the Chrome Web Store, so build it and load it unpacked.
+### From a release (recommended)
+
+1. Download `piii-<version>.zip` from [Releases](https://github.com/JaySmith502/PiiI/releases) and unzip it into a folder you will keep (Chrome loads the folder, not the zip).
+2. Open `chrome://extensions`.
+3. Turn on **Developer mode** (top right).
+4. Click **Load unpacked** and select the unzipped folder — the one containing `manifest.json`.
+5. On first use, give the NER model a few seconds to download. After that, everything is offline.
+
+### From source
 
 Requirements: Node 18+ and Chrome 120+.
 
 ```bash
-git clone https://github.com/JaySmith502/piii.git
-cd piii
+git clone https://github.com/JaySmith502/PiiI.git
+cd PiiI
 npm install
 npm run build
 ```
 
-Then:
+Then load the `dist/` folder as above (**Load unpacked** → select `dist/`).
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode** (top right).
-3. Click **Load unpacked** and select the `dist/` folder.
-4. On first use, give the NER model a few seconds to download.
+To produce the Chrome Web Store archive yourself:
 
-For watch mode during development, run `npm run dev` and reload the extension after each build.
+```bash
+npm run package   # builds, then writes release/piii-<version>.zip
+```
 
-A detailed walkthrough, including per-feature verification and a Chrome Web Store submission checklist, is in [`deploy-guide.html`](deploy-guide.html).
+Useful scripts:
+
+| Command | What it does |
+|---------|--------------|
+| `npm run dev` | Rebuild on change (reload the extension to apply) |
+| `npm run typecheck` | TypeScript, no emit |
+| `npm test` | Unit tests |
+| `npm run verify` | typecheck + tests + build |
+| `npm run package` | Build and produce the store-ready zip |
 
 ## Usage
 
@@ -111,9 +115,23 @@ The toolbar popup gives you:
 
 ## Known limitations
 
-- **Grok is not supported.** Its composer is unreachable from the content script's isolated world, so PiiI cannot intercept it. The code is shelved in `src/content/adapters/grok.ts`.
+- **Grok is best-effort, not supported.** Its composer frequently renders in a way the content script's isolated world cannot reach, so interception is unreliable. The adapter is kept in `src/content/adapters/grok.ts` and will start working if Grok's DOM changes.
 - **First-run latency.** The model download (one time) means the very first prompt on a fresh install waits a few seconds before detection is ready.
 - **Single-language UI.** Detection is multilingual via the model, but the extension UI is English only.
+
+## Troubleshooting
+
+**The popup says the model is "Unavailable".**
+Pattern rules (email, phone, credit card, SSN, API key, ID, URL, date) still work — only names and addresses are affected. Check your connection and press **Retry** in the popup; the model is fetched once from the Hugging Face CDN, so a corporate proxy or firewall that blocks it will keep it unavailable. Everything else stays local.
+
+**Nothing is detected on a supported site.**
+The site's DOM changes often. Open the popup and confirm the header reads **Active** (if it reads **Paused**, click **Resume protection**), then reload the tab so the content script re-attaches. If it still does not fire, please [open an issue](https://github.com/JaySmith502/PiiI/issues/new) with the site name and your Chrome version.
+
+**A term I care about keeps getting flagged.**
+Add it to the **Whitelist** in the popup, or select it on the page and press `Alt+Shift+A` to always allow it.
+
+**I want to see what was detected.**
+Open the popup → **Audit log** → **CSV**. The log records the platform, the action taken, and the categories detected — never the raw values.
 
 ## Project layout
 

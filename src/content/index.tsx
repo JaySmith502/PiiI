@@ -2,7 +2,7 @@ import { getAdapter } from './adapters'
 import type { PlatformAdapter } from './adapters'
 import { runDetection, combineDetections } from './detection'
 import { classifyAction, selectReviewDetections } from './submitFlow'
-import { whitelistFromChange } from '../background/storage'
+import { whitelistFromChange, settingsFromChange, getSettings } from '../background/storage'
 import { HighlightManager } from './highlight'
 import type {
   NerResponse,
@@ -89,20 +89,34 @@ console.info('[PiiI] loaded on', window.location.hostname, '— adapter:', adapt
 if (adapter) {
   // Shadow to give TypeScript a non-null constant for closures
   const safeAdapter = adapter
-  const highlighter = new HighlightManager()
-  const dealiasEngine = new DealiasEngine()
-  const cleanupFileScanner = setupFileScanner(() => whitelist)
-  let cleanupInput: (() => void) | null = null
-  let whitelist = new Set<string>()
-  let latestText = ''
-  let currentRunAndUpdate: (() => void) | null = null
 
-  // Load whitelist from storage on init
-  sendToBackground<{ ok: boolean; data: WhitelistEntry[] }>({ type: 'GET_WHITELIST' })
-    .then(r => {
-      if (r.ok && r.data) whitelist = new Set(r.data.map((e: WhitelistEntry) => e.term))
-    })
-    .catch(() => {})
+  // The running instance. Non-null only while protection is enabled, so the
+  // master switch genuinely tears everything down: no observers, no highlights,
+  // no document-level submit listeners. A page left open across a pause must
+  // stop intercepting, and must resume without a reload.
+  interface Running {
+    stop(): void
+    applyWhitelist(entries: WhitelistEntry[]): void
+  }
+  let running: Running | null = null
+
+  function start(): void {
+    if (running) return
+
+    const highlighter = new HighlightManager()
+    const dealiasEngine = new DealiasEngine()
+    let cleanupInput: (() => void) | null = null
+    let whitelist = new Set<string>()
+    let latestText = ''
+    let currentRunAndUpdate: (() => void) | null = null
+    const cleanupFileScanner = setupFileScanner(() => whitelist)
+
+    // Load whitelist from storage on init
+    sendToBackground<{ ok: boolean; data: WhitelistEntry[] }>({ type: 'GET_WHITELIST' })
+      .then(r => {
+        if (r.ok && r.data) whitelist = new Set(r.data.map((e: WhitelistEntry) => e.term))
+      })
+      .catch(() => {})
 
   function setupInput(inputEl: HTMLElement) {
     cleanupInput?.()
@@ -297,37 +311,58 @@ if (adapter) {
     }
   }
 
-  let cleanupWait = waitForInput(safeAdapter, setupInput)
+    let cleanupWait = waitForInput(safeAdapter, setupInput)
 
-  const cleanupConvChange = safeAdapter.onConversationChange(() => {
-    cleanupWait()
-    cleanupInput?.()
-    cleanupInput = null
-    currentRunAndUpdate = null
-    latestText = ''
-    dealiasEngine.stop()
-    // Small delay: SPA may not have new input immediately after URL change
-    setTimeout(() => {
-      // reassign so the unload handler's closure reads the latest cleanup ref
-      cleanupWait = waitForInput(safeAdapter, setupInput)
-    }, 300)
-  })
+    const cleanupConvChange = safeAdapter.onConversationChange(() => {
+      cleanupWait()
+      cleanupInput?.()
+      cleanupInput = null
+      currentRunAndUpdate = null
+      latestText = ''
+      dealiasEngine.stop()
+      // Small delay: SPA may not have new input immediately after URL change
+      setTimeout(() => {
+        // reassign so the unload handler's closure reads the latest cleanup ref
+        cleanupWait = waitForInput(safeAdapter, setupInput)
+      }, 300)
+    })
 
-  // Update whitelist and re-run detection immediately when storage changes
+    running = {
+      stop() {
+        cleanupWait()
+        cleanupInput?.()
+        cleanupConvChange()
+        dealiasEngine.stop()
+        cleanupFileScanner()
+        running = null
+      },
+      applyWhitelist(entries: WhitelistEntry[]) {
+        whitelist = new Set(entries.map(e => e.term))
+        if (latestText && currentRunAndUpdate) currentRunAndUpdate()
+      },
+    }
+  }
+
+  // Master switch. Protection is on unless the user paused it in the popup; a
+  // settings read that fails keeps the protected default rather than silently
+  // leaving the user unguarded.
+  getSettings()
+    .then(settings => { if (settings.enabled) start() })
+    .catch(() => start())
+
   chrome.storage.onChanged.addListener((changes, area) => {
+    // A whitelist edit re-runs detection in place; the master switch starts/stops
+    // the whole instance so a paused page stops intercepting immediately.
     const entries = whitelistFromChange(area, changes)
-    if (!entries) return
-    whitelist = new Set(entries.map(e => e.term))
-    if (latestText && currentRunAndUpdate) currentRunAndUpdate()
+    if (entries) running?.applyWhitelist(entries)
+
+    const settings = settingsFromChange(area, changes)
+    if (!settings) return
+    if (settings.enabled) start()
+    else running?.stop()
   })
 
-  window.addEventListener('unload', () => {
-    cleanupWait()
-    cleanupInput?.()
-    cleanupConvChange()
-    dealiasEngine.stop()
-    cleanupFileScanner()
-  })
+  window.addEventListener('unload', () => { running?.stop() })
 }
 
 // Respond to popup and service-worker queries
