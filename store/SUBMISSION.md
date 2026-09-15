@@ -189,11 +189,34 @@ for the full detail. PiiI is open source under the MIT licence.
 
 ### 2a. Single purpose statement
 
+The console field is **Single purpose description** — *"Fill out this field to help
+the reviewers understand the focus of your extension."* No character limit is
+published, but the policy asks for something *narrow and easy to understand*, so
+keep it short.
+
 ```
-PiiI has one purpose: to detect personal information in the text and attachments
-you are about to send to an AI chat service, and to let you replace that
-information before it leaves your browser.
+PiiI has a single purpose: to find the personal information you are about to send
+to an AI chat service, and to let you remove it before it leaves your browser.
+
+It inspects the message text and any files you attach on the supported AI chat
+sites, flags what looks sensitive, and gives you the choice to replace each item
+or allow it through.
+
+Every other feature serves that one purpose — the review panel, the alias map, the
+whitelist, the local audit log and the on-device detection model exist only to
+identify sensitive data and act on your decision. PiiI has no second function,
+requests no host permissions, and collects no data.
 ```
+
+> **Why the third paragraph matters.** The policy's stated failure mode is an
+> extension that *"requires users to accept bundles of unrelated functionality."*
+> PiiI has several visible features (attachments, model download, audit log,
+> whitelist), and a reviewer sees them before they see the reason they belong
+> together. Naming them and tying each back to the one purpose pre-empts the
+> question. The permission clause is deliberate too: the FAQ says *"Excessive
+> permissions unrelated to your extension's single purpose will be viewed as
+> enabling unrelated functionalities"* — and PiiI requests no host permissions at
+> all, which is worth stating where the reviewer is judging scope.
 
 ### 2b. Permission justifications
 
