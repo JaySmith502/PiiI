@@ -1,11 +1,11 @@
 # Chrome Web Store — submission package
 
-Everything needed to publish **PiiI v1.0.5**. Copy-paste from the fenced blocks.
+Everything needed to publish **PiiI v1.0.6**. Copy-paste from the fenced blocks.
 
-- **Artifact:** `release/piii-1.0.5.zip`
-- **Privacy policy URL:** `https://github.com/JaySmith502/PiiI/blob/main/PRIVACY.md`
-- **Support URL:** `https://github.com/JaySmith502/PiiI/issues`
-- **Homepage URL:** `https://github.com/JaySmith502/PiiI`
+- **Artifact:** `release/piii-1.0.6.zip`
+- **Privacy policy URL:** `https://jaysmith502.github.io/PiiI-public/privacy.html`
+- **Support URL:** `https://github.com/JaySmith502/PiiI-public/issues`
+- **Homepage URL:** `https://jaysmith502.github.io/PiiI-public/`
 
 ---
 
@@ -50,8 +50,8 @@ WHAT IT DETECTS
 WHERE IT RUNS
 
 ChatGPT, Claude, Gemini, Copilot and Perplexity. The complete list of supported
-sites — with the exact URL patterns each one matches — is kept here:
-https://github.com/JaySmith502/PiiI
+sites — with the exact URL patterns each one matches — is here:
+https://github.com/JaySmith502/PiiI-public/blob/main/SITES.md
 
 HOW IT WORKS
 
@@ -95,7 +95,7 @@ WHY YOU CAN TRUST IT
 • No analytics, no telemetry, no tracking.
 • Your prompt text and files never leave your device.
 • Detection runs locally: fast regex rules plus an on-device ML model.
-• Open source — read every line, or build it yourself.
+• No PiiI-operated servers exist — there is nothing on our side to store, sell or leak.
 
 The one exception is disclosed in full: on first run the extension fetches its
 name/address detection model once from the Hugging Face CDN, then caches it.
@@ -149,17 +149,18 @@ on the page and press Alt+Shift+A.
 
 LINKS
 
-Source code and the full supported-site list:
-https://github.com/JaySmith502/PiiI
+Full supported-site list:
+https://github.com/JaySmith502/PiiI-public/blob/main/SITES.md
 Privacy policy:
-https://github.com/JaySmith502/PiiI/blob/main/PRIVACY.md
+https://jaysmith502.github.io/PiiI-public/privacy.html
 Support and bug reports:
-https://github.com/JaySmith502/PiiI/issues
+https://github.com/JaySmith502/PiiI-public/issues
 
-Open source under the MIT licence.
+PiiI has no backend, no account and no telemetry — see the privacy policy above
+for the full detail.
 ```
 
-> **Length:** 5,018 characters of the 16,000 allowed. Longer is fine, but
+> **Length:** 5,149 characters of the 16,000 allowed. Longer is fine, but
 > **do not add more brand names.** The CWS keyword-spam policy caps the sites or
 > brands *listed* in a description at **five**, and this copy already uses five
 > (ChatGPT, Claude, Gemini, Copilot, Perplexity). Additional sites go behind the
@@ -258,8 +259,9 @@ downloads ~296 MB of model *weights* (static data files) once from the Hugging
 Face CDN, for the public model onnx-community/multilang-pii-ner-ONNX, and the
 browser caches them. These are data files interpreted by the bundled runtime, not
 code, and they are not executed. The request contains no user data and carries no
-user identifier. Detection runs fully offline thereafter. Source:
-https://github.com/JaySmith502/PiiI
+user identifier. Detection runs fully offline thereafter. The model is a public
+one, hosted by Hugging Face and independently inspectable:
+https://huggingface.co/onnx-community/multilang-pii-ner-ONNX
 ```
 
 ### 2d. Data usage disclosures
@@ -313,7 +315,7 @@ minute; on a slow one it will take considerably longer.
 
 ## 4. Pre-submission checklist
 
-- [x] `manifest.json` at the archive root, version `1.0.5`
+- [x] `manifest.json` at the archive root, version `1.0.6`
 - [x] Version is a plain `x.y.z` (the store rejects a `-beta` suffix)
 - [x] `web_accessible_resources` scoped to chat domains — no `<all_urls>`
 - [x] Every `web_accessible_resources` match is origin-level with a literal `/*`

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { PUBLIC_NEW_ISSUE_URL } from '../config/links'
 import type { AuditEntry, WhitelistEntry } from '../types'
 import {
   getAuditLog,
@@ -516,7 +517,7 @@ export function Popup() {
           Setup guide
         </button>
         <a
-          href="https://github.com/JaySmith502/PiiI/issues/new"
+          href={PUBLIC_NEW_ISSUE_URL}
           target="_blank"
           rel="noreferrer"
           style={{ ...linkBtn, marginLeft: 'auto' }}

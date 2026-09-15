@@ -85,10 +85,10 @@ knowingly collects no personal data from anyone, regardless of age.
 
 ## Changes to this policy
 
-Material changes will be noted in [CHANGELOG.md](CHANGELOG.md) and reflected in
-the "Last updated" date above.
+Material changes will be reflected in the "Last updated" date above, and noted in
+the release notes of the Chrome Web Store listing.
 
 ## Contact
 
 Questions or concerns? Open an issue at
-<https://github.com/JaySmith502/PiiI/issues>.
+<https://github.com/JaySmith502/PiiI-public/issues>.

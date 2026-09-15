@@ -1,4 +1,5 @@
 import { C, FONT, BrandMark, BrandStyle } from '../brand'
+import { PUBLIC_PRIVACY_URL, PUBLIC_SUPPORT_URL } from '../config/links'
 
 // First-run onboarding. Opens once, in its own tab, right after install.
 //
@@ -201,11 +202,11 @@ export function Welcome() {
           <span aria-hidden>·</span>
           <span>MIT licensed</span>
           <span aria-hidden>·</span>
-          <a href="https://github.com/JaySmith502/PiiI" target="_blank" rel="noreferrer" style={{ color: C.blue }}>
-            Source &amp; issues
+          <a href={PUBLIC_SUPPORT_URL} target="_blank" rel="noreferrer" style={{ color: C.blue }}>
+            Support
           </a>
           <span aria-hidden>·</span>
-          <a href="https://github.com/JaySmith502/PiiI/blob/main/PRIVACY.md" target="_blank" rel="noreferrer" style={{ color: C.blue }}>
+          <a href={PUBLIC_PRIVACY_URL} target="_blank" rel="noreferrer" style={{ color: C.blue }}>
             Privacy policy
           </a>
           <button

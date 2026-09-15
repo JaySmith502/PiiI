@@ -5,6 +5,32 @@ All notable changes to PiiI are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] — 2026-09-15
+
+### Changed
+
+- **Every user-facing link now points at the public documentation repository.**
+  The source repository is private, which broke four URLs that shipped inside
+  v1.0.5: `homepage_url` in the manifest, the "Source & issues" and "Privacy
+  policy" links on the onboarding page, and the popup's "Report a problem" link.
+  Users and reviewers would have hit a 404 on all four — including the in-product
+  privacy policy, which is the one a reviewer is most likely to click. URLs are
+  now declared once in `src/config/links.ts` and imported by both the manifest
+  config and the UI, so they cannot drift apart again.
+- **The published privacy policy is generated rather than hand-maintained.**
+  `scripts/build-public-site.mjs` renders `PRIVACY.md` — the same file the
+  extension ships with — into `privacy.html` in the public repository. Run
+  `node scripts/build-public-site.mjs --check` to fail if the published copy is
+  stale. This is what stops the store listing's privacy policy from drifting out
+  of sync with the text users can read inside the extension.
+
+### Fixed
+
+- Removed the "open source" claim from the store listing and from the manifest
+  and `package.json` descriptions. Now that the source is not published, the
+  claim would have been inaccurate, and a listing that overstates what a user can
+  verify is a straightforward rejection risk.
+
 ## [1.0.5] — 2026-09-15
 
 ### Changed
@@ -126,7 +152,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Attachment scanning for `.txt`, `.csv`, `.md`, `.log`, `.json`, `.docx`, `.pdf`.
 - Support for ChatGPT, Claude, Gemini, Copilot, Perplexity, and DeepSeek.
 
-[Unreleased]: https://github.com/JaySmith502/PiiI/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/JaySmith502/PiiI/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/JaySmith502/PiiI/compare/v1.0.5...v1.0.6
+[1.0.5]: https://github.com/JaySmith502/PiiI/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/JaySmith502/PiiI/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/JaySmith502/PiiI/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/JaySmith502/PiiI/compare/v1.0.1...v1.0.2

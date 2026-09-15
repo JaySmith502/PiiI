@@ -1,9 +1,9 @@
 {
   "name": "piii",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "private": true,
   "type": "module",
-  "description": "Open-source AI data-loss prevention — detects and masks PII before it leaves your browser.",
+  "description": "AI data-loss prevention — detects and masks PII before it leaves your browser.",
   "license": "MIT",
   "repository": {
     "type": "git",

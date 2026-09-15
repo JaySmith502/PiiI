@@ -2,7 +2,7 @@
 
 **Detect and mask personal data before it ever reaches an AI chatbot.**
 
-PiiI is an open-source Chrome (Manifest V3) extension that intercepts your prompt as you send it to an AI chat platform, finds the personal data inside it, and offers to swap each value for an alias before the message leaves your browser.
+PiiI is a Chrome (Manifest V3) extension that intercepts your prompt as you send it to an AI chat platform, finds the personal data inside it, and offers to swap each value for an alias before the message leaves your browser.
 Detection and machine-learning inference run entirely on your machine.
 No prompt text, and no detected data, is ever sent to a server.
 
@@ -50,7 +50,7 @@ PiiI handles untrusted input by design — prompts, and files you attach — so 
 - **Fail-closed file scanning.** A file that cannot be parsed is blocked rather than passed through unscanned.
 - **Narrow host permissions.** The content script is declared only for the supported chat domains listed in `manifest.json`; it is never injected on `<all_urls>`. The one `<all_urls>` entry in the manifest is under `web_accessible_resources` and exposes a single static file, `pdf.worker.min.mjs`, so the PDF parser can be loaded into the page — it grants no access to page content or user data.
 
-Found something? Please open a [security issue](https://github.com/JaySmith502/PiiI/issues/new) or contact the maintainer directly.
+Found something? Please open a [security issue](https://github.com/JaySmith502/PiiI-public/issues/new) or contact the maintainer directly.
 
 ## Supported platforms
 
@@ -143,7 +143,7 @@ The toolbar popup gives you:
 Pattern rules (email, phone, credit card, SSN, API key, ID, URL, date) still work — only names and addresses are affected. Check your connection and press **Retry** in the popup; the model is fetched once from the Hugging Face CDN, so a corporate proxy or firewall that blocks it will keep it unavailable. Everything else stays local.
 
 **Nothing is detected on a supported site.**
-The site's DOM changes often. Open the popup and confirm the header reads **Active** (if it reads **Paused**, click **Resume protection**), then reload the tab so the content script re-attaches. If it still does not fire, please [open an issue](https://github.com/JaySmith502/PiiI/issues/new) with the site name and your Chrome version.
+The site's DOM changes often. Open the popup and confirm the header reads **Active** (if it reads **Paused**, click **Resume protection**), then reload the tab so the content script re-attaches. If it still does not fire, please [open an issue](https://github.com/JaySmith502/PiiI-public/issues/new) with the site name and your Chrome version.
 
 **A term I care about keeps getting flagged.**
 Add it to the **Whitelist** in the popup, or select it on the page and press `Alt+Shift+A` to always allow it.

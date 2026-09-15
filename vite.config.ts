@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
 import { copyFileSync, mkdirSync, readFileSync } from 'fs'
 import { join } from 'path'
+import { PUBLIC_SITE_URL } from './src/config/links'
 
 // Single source of truth for the version: package.json. The manifest and the
 // onboarding page footer both read it, so a release bump happens in one place.
@@ -95,11 +96,11 @@ const manifest = defineManifest({
   manifest_version: 3,
   name: 'PiiI',
   version: pkg.version,
-  description: 'Open-source AI data-loss prevention — detects and masks PII before it leaves your browser.',
+  description: 'AI data-loss prevention — detects and masks PII before it leaves your browser.',
   // Store listing + support link for customers, and the oldest Chrome whose APIs
   // PiiI actually relies on (chrome.runtime.getContexts landed in 116; the
   // offscreen document and MV3 service-worker behaviour are stable from 120).
-  homepage_url: 'https://github.com/JaySmith502/PiiI',
+  homepage_url: PUBLIC_SITE_URL,
   minimum_chrome_version: '120',
   // Every permission here is justified to the user on the onboarding page.
   // Deliberately absent: tabs, webRequest, scripting, host_permissions — PiiI
