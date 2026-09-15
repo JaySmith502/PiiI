@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] — 2026-09-15
+
+### Changed
+
+- **Narrowed `web_accessible_resources` from `<all_urls>` to the supported chat
+  sites.** The bundled PDF worker was reachable from any origin on the web; it is
+  only ever loaded by the content script, which runs exclusively on the nine
+  supported chat domains, so the exposure was unnecessary. The content-script
+  match list is now defined once and shared by both declarations, so the two
+  cannot drift apart.
+
 ## [1.0.2] — 2026-09-15
 
 ### Fixed
@@ -61,7 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Attachment scanning for `.txt`, `.csv`, `.md`, `.log`, `.json`, `.docx`, `.pdf`.
 - Support for ChatGPT, Claude, Gemini, Copilot, Perplexity, and DeepSeek.
 
-[Unreleased]: https://github.com/JaySmith502/PiiI/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/JaySmith502/PiiI/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/JaySmith502/PiiI/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/JaySmith502/PiiI/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/JaySmith502/PiiI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/JaySmith502/PiiI/releases/tag/v1.0.0

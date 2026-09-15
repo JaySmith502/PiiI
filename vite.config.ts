@@ -63,6 +63,21 @@ function ortBuildPlugin(): Plugin {
   }
 }
 
+// The chat surfaces PiiI supports. Single source of truth: the content script
+// injects on exactly these, and the bundled PDF worker is exposed to exactly
+// these (see web_accessible_resources) — nothing broader.
+const SITE_MATCHES = [
+  'https://chat.openai.com/*',
+  'https://chatgpt.com/*',
+  'https://claude.ai/*',
+  'https://gemini.google.com/*',
+  'https://copilot.microsoft.com/*',
+  'https://grok.com/*',
+  'https://x.com/i/grok*',
+  'https://www.perplexity.ai/*',
+  'https://chat.deepseek.com/*',
+]
+
 const manifest = defineManifest({
   manifest_version: 3,
   name: 'PiiI',
@@ -105,17 +120,7 @@ const manifest = defineManifest({
   },
   content_scripts: [
     {
-      matches: [
-        'https://chat.openai.com/*',
-        'https://chatgpt.com/*',
-        'https://claude.ai/*',
-        'https://gemini.google.com/*',
-        'https://copilot.microsoft.com/*',
-        'https://grok.com/*',
-        'https://x.com/i/grok*',
-        'https://www.perplexity.ai/*',
-        'https://chat.deepseek.com/*',
-      ],
+      matches: SITE_MATCHES,
       js: ['src/content/index.tsx'],
     },
   ],
@@ -127,8 +132,11 @@ const manifest = defineManifest({
   },
   web_accessible_resources: [
     {
+      // Loaded by the content script (chrome.runtime.getURL) when scanning a PDF
+      // attachment, so it only needs to be reachable from the supported chat
+      // sites. '<all_urls>' here would let any page on the web probe the bundle.
       resources: ['pdf.worker.min.mjs'],
-      matches: ['<all_urls>'],
+      matches: SITE_MATCHES,
     },
   ],
 })
