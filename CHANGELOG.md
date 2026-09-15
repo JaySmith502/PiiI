@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Corrected the stated first-run model download size. The README claimed the model
+  "downloads in a few seconds"; the actual payload is **~296 MB** (278.7 MB of
+  quantised model weights from `onnx/model_quantized.onnx`, plus a 17.1 MB
+  tokenizer). The download is one-time and cached, but the previous wording
+  materially understated it and would read to a user as a hang or a failure.
+- Added `store/SUBMISSION.md`: the Chrome Web Store listing copy, permission
+  justifications, data-usage disclosures, reviewer test steps, and known review
+  risks.
+
 ## [1.0.3] — 2026-09-15
 
 ### Changed

@@ -27,12 +27,12 @@ You keep a local map of which alias stands for which real value, so the replies 
 5. On accept, the real values are substituted with aliases in the input field, and only then is the message sent.
 
 The ONNX runtime ships inside the extension.
-The model weights are downloaded once from the Hugging Face CDN on first run and then cached by the browser; after that, everything is offline and local.
+The model weights (~296 MB) are downloaded once from the Hugging Face CDN on first run and then cached by the browser; after that, everything is offline and local.
 
 ## Privacy model
 
 - **Local-only inference.** Prompt text never leaves your browser. There is no backend, no API, and no telemetry.
-- **One-time model download.** The NER weights are fetched from the Hugging Face CDN the first time you use it, then cached. Nothing about your prompts is sent in that request.
+- **One-time model download.** The NER weights (~296 MB) are fetched from the Hugging Face CDN the first time you use it, then cached. Nothing about your prompts is sent in that request.
 - **Local storage only.** The alias map, audit log, and whitelist live in `chrome.storage.local` on your machine.
 
 The full, store-listing privacy policy is in [PRIVACY.md](PRIVACY.md).
@@ -86,7 +86,7 @@ Files are capped at 50,000 characters and the scan is fail-closed: if a file can
 2. Open `chrome://extensions`.
 3. Turn on **Developer mode** (top right).
 4. Click **Load unpacked** and select the unzipped folder — the one containing `manifest.json`.
-5. On first use, give the NER model a few seconds to download. After that, everything is offline.
+5. On first use, let the NER model download (~296 MB — it is cached, so this happens once). Until it finishes, regex detection works but names and addresses are not detected. After that, everything is offline.
 
 ### From source
 
@@ -133,7 +133,7 @@ The toolbar popup gives you:
 ## Known limitations
 
 - **Grok is best-effort, not supported.** Its composer frequently renders in a way the content script's isolated world cannot reach, so interception is unreliable. The adapter is kept in `src/content/adapters/grok.ts` and will start working if Grok's DOM changes.
-- **First-run latency.** The model download (one time) means the very first prompt on a fresh install waits a few seconds before detection is ready.
+- **First-run latency.** The model download is ~296 MB and happens once. On a fast connection that is well under a minute; on a slow or metered connection it can take much longer, and name/address detection is unavailable until it completes. Regex-based categories (email, phone, SSN, card, API key, account number) work immediately.
 - **Single-language UI.** Detection is multilingual via the model, but the extension UI is English only.
 
 ## Troubleshooting
