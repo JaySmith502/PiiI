@@ -37,6 +37,12 @@ const PROFILE = path.join(tmpdir(), 'piii-screenshot-profile')
 const W = 1280
 const H = 800
 
+// Chrome Web Store "small promo tile". Optional, but a listing cannot be
+// featured without one. Rendered from the same brand system as the frames.
+const PW = 440
+const PH = 280
+const PROMO_OUT = path.join(ROOT, 'store', 'promo')
+
 // The reviewer test message from store/SUBMISSION.md, trimmed to the categories
 // the pattern rules catch synchronously.
 const PROMPT =
@@ -184,9 +190,47 @@ li{display:flex;align-items:flex-start;gap:11px;font-size:14.5px;color:#525252;l
 }
 
 // ---------------------------------------------------------------------------
+// Small promo tile (440x280). Read at thumbnail size in the store grid, so it
+// carries the mark, the name and one line of value — nothing more.
+// ---------------------------------------------------------------------------
+
+function promoHtml(iconB64) {
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><style>
+${brandFontCss()}
+*{box-sizing:border-box}
+html,body{margin:0;width:${PW}px;height:${PH}px;overflow:hidden}
+body{
+  font-family:'Archivo',system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(520px 300px at 86% -18%, #D6EAF8 0%, rgba(214,234,248,0) 66%),
+    radial-gradient(420px 260px at 0% 112%, #FFF1C2 0%, rgba(255,241,194,0) 62%),
+    #FAF9F4;
+  color:#141414;display:flex;flex-direction:column;justify-content:center;
+  padding:0 34px;position:relative;
+}
+.brand{display:flex;align-items:center;gap:11px;margin:0 0 14px}
+.brand img{width:40px;height:40px;display:block;border-radius:10px}
+.wordmark{font-family:'Jost',sans-serif;font-weight:900;font-size:30px;letter-spacing:-.02em;line-height:1}
+h1{font-family:'Jost',sans-serif;font-weight:900;font-size:31px;line-height:1.06;letter-spacing:-.025em;margin:0 0 13px}
+.rule{width:52px;height:5px;background:#1B81CE;margin:0 0 13px}
+p.tag{font-size:13.5px;line-height:1.5;color:#4A4A4A;margin:0;max-width:34ch}
+</style></head>
+<body>
+  <div class="brand">
+    <img src="data:image/png;base64,${iconB64}" alt="">
+    <span class="wordmark">PiiI</span>
+  </div>
+  <h1>Catch PII before<br>you hit send.</h1>
+  <div class="rule"></div>
+  <p class="tag">Masks names, emails, cards and IDs in your AI chats &mdash; on&#8209;device.</p>
+</body></html>`
+}
+
+// ---------------------------------------------------------------------------
 
 /** Guards against shipping a blank/black/mis-sized capture as a store asset. */
-async function verifyShot(probe, file) {
+async function verifyShot(probe, file, expectW = W, expectH = H) {
   const b64 = readFileSync(file).toString('base64')
   const stats = await probe.evaluate(async (dataUri) => {
     const img = new Image()
@@ -213,7 +257,8 @@ async function verifyShot(probe, file) {
   }, b64)
 
   const problems = []
-  if (stats.w !== W || stats.h !== H) problems.push(`size ${stats.w}x${stats.h}, expected ${W}x${H}`)
+  if (stats.w !== expectW || stats.h !== expectH)
+    problems.push(`size ${stats.w}x${stats.h}, expected ${expectW}x${expectH}`)
   if (stats.colors < 40) problems.push(`only ${stats.colors} distinct colours - looks blank`)
   if (stats.meanLum < 8) problems.push(`mean luminance ${stats.meanLum} - looks black`)
   const verdict = problems.length ? `FAIL (${problems.join('; ')})` : 'ok'
@@ -239,6 +284,7 @@ async function main() {
   })
 
   const results = []
+  let promoShot = null
 
   try {
     // Resolve the extension id from its service worker — the id is derived from
@@ -364,6 +410,17 @@ async function main() {
     const shot4 = path.join(OUT, '04-welcome.png')
     await welcome.screenshot({ path: shot4 })
     results.push(shot4)
+
+    // -- 5. Small promo tile (optional, required to be featured) --------------
+    mkdirSync(PROMO_OUT, { recursive: true })
+    const tile = await context.newPage()
+    await tile.setViewportSize({ width: PW, height: PH })
+    await tile.setContent(
+      promoHtml(readFileSync(path.join(DIST, 'icons', 'icon256.png')).toString('base64')),
+    )
+    await tile.waitForTimeout(500)
+    promoShot = path.join(PROMO_OUT, 'tile-440x280.png')
+    await tile.screenshot({ path: promoShot, omitBackground: false })
   } finally {
     await context.close()
     rmSync(PROFILE, { recursive: true, force: true })
@@ -376,11 +433,13 @@ async function main() {
     const page = await probeCtx.newPage()
     await page.goto('about:blank')
     for (const f of results) checks.push(await verifyShot(page, f))
+    if (promoShot) checks.push(await verifyShot(page, promoShot, PW, PH))
   } finally {
     await probeCtx.close()
   }
 
   console.log(`\nwrote ${results.length} screenshot(s) to ${path.relative(ROOT, OUT)}/`)
+  if (promoShot) console.log(`wrote promo tile to ${path.relative(ROOT, promoShot)}`)
   if (checks.some((c) => !c)) {
     console.error('one or more captures failed verification')
     process.exit(1)

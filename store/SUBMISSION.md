@@ -100,7 +100,7 @@ Open source under the MIT licence.
 |---|---|---|
 | Store icon | 128×128 PNG | `icons/icon128.png` ✅ |
 | Screenshots | 1–5, 1280×800 or 640×400 | ✅ 4 captured in `store/screenshots/` — see §5 |
-| Small promo tile | 440×280 PNG (optional, needed to be featured) | ❌ not produced |
+| Small promo tile | 440×280 PNG (optional, needed to be featured) | ✅ `store/promo/tile-440x280.png` — see §5 |
 
 ---
 
@@ -250,6 +250,7 @@ minute; on a slow one it will take considerably longer.
 - [x] Privacy policy written and public
 - [x] Under the 2 GB package limit; only production assets in the archive
 - [x] Screenshots captured (§5) — `store/screenshots/`, 4 × 1280×800
+- [x] Small promo tile captured — `store/promo/tile-440x280.png`
 - [ ] $5 developer registration paid (one-off)
 - [ ] Store listing text pasted
 - [ ] Privacy practices tab completed (§2)
@@ -261,7 +262,8 @@ minute; on a slow one it will take considerably longer.
 ## 5. Screenshots
 
 **Captured.** Four images, all exactly 1280×800, in `store/screenshots/`. Upload
-them in this order — the first is the one the listing leads with.
+them in this order — the first is the one the listing leads with. The 440×280
+promo tile lives in `store/promo/` and is uploaded on the same tab.
 
 | # | File | Shows |
 |---|---|---|
