@@ -33,7 +33,7 @@ PiiI catches personal information before it leaves your browser and lands in a
 third-party AI service.
 
 Paste a customer email into ChatGPT, attach a spreadsheet to Claude, or ask
-Gemini to summarise a contract — PiiI inspects the text on the way out, shows you
+Gemini to summarise a contract — it inspects the text on the way out, shows you
 what it found, and offers to swap each item for a stand-in before you hit send.
 
 WHAT IT DETECTS
@@ -47,25 +47,40 @@ WHAT IT DETECTS
 • Account, passport, licence and ID numbers
 • URLs and dates
 
-WORKS WHERE YOU WORK
+WHERE IT RUNS
 
-ChatGPT, Claude, Gemini, Copilot, Grok, Perplexity and DeepSeek.
+ChatGPT, Claude, Gemini, Copilot and Perplexity. The complete list of supported
+sites — with the exact URL patterns each one matches — is kept here:
+https://github.com/JaySmith502/PiiI
+
+HOW IT WORKS
+
+1. Install PiiI and pin it to your toolbar.
+2. Open a supported chat site and write your message as you normally would.
+3. Press send. If it finds anything sensitive it opens a review panel listing
+   each detected item next to a suggested replacement.
+4. Accept the suggestions, edit any of them, or send your original text
+   unchanged.
+
+Pattern-based categories (email, phone, credit card, SSN, API key) work the
+moment you install. Name and address detection becomes available once the
+detection model has finished downloading — see "Requirements and first run".
 
 YOU STAY IN CONTROL
 
-PiiI never silently rewrites your message. Every detection is offered to you in a
-review panel first: accept the suggested stand-in, edit it, or send the original
+Nothing is rewritten silently. Every detection is offered to you in a review
+panel first: accept the suggested stand-in, edit it, or send the original
 instead. Nothing is changed until you say so.
 
 REPLIES STAY READABLE
 
 Redaction normally makes a reply impossible to follow — every name becomes the
-same placeholder. PiiI keeps a local alias map, so a name is consistently
+same placeholder. The extension keeps a local alias map, so a name is consistently
 "Alex Rivera" throughout the conversation and you can still read what came back.
 
 AUDIT LOG
 
-See exactly how many items of each kind PiiI caught, and when. Export it to CSV
+See exactly how many items of each kind were caught, and when. Export it to CSV
 for your own records. The log records categories and counts — never the values
 themselves.
 
@@ -82,17 +97,78 @@ WHY YOU CAN TRUST IT
 • Detection runs locally: fast regex rules plus an on-device ML model.
 • Open source — read every line, or build it yourself.
 
-The one exception is honest and disclosed: on first run PiiI downloads its
+The one exception is disclosed in full: on first run the extension fetches its
 name/address detection model once from the Hugging Face CDN, then caches it.
 That request contains none of your data. After it completes, detection is fully
 offline.
 
-PiiI asks for five permissions and no host permissions at all. It reads a page
-only on the chat sites listed above, and never requests access to tabs, your
-browsing history, or other websites.
+The extension asks for five permissions and no host permissions at all. It reads
+a page only on the chat sites listed above, and never requests access to tabs,
+your browsing history, or other websites.
+
+REQUIREMENTS AND FIRST RUN
+
+• Chrome 120 or later.
+• On first run it downloads roughly 300 MB of model weights once and caches
+  them. On a fast connection this takes well under a minute; on a slow or metered
+  connection it takes considerably longer, and the popup shows the progress.
+• Until that download completes, pattern-based categories work and names and
+  addresses are not yet detected. Press Retry in the popup if it fails.
+
+KNOWN LIMITATIONS
+
+PiiI is a safety net, not a guarantee. It surfaces what it finds and leaves the
+decision to you. It cannot promise to catch every sensitive value, and it should
+not be relied on as your only safeguard before sending data to a third party.
+
+• Detection is best-effort. Pattern rules and a machine-learning model will
+  occasionally miss a value, or flag something harmless.
+• Chat sites change their page structure often. If interception stops firing on
+  a site, reload the tab so the extension can re-attach, and check for an update.
+• The interface is English only. Detection itself is multilingual.
+
+DELETING YOUR DATA
+
+Pause protection, clear the audit log, clear the alias map and clear the
+whitelist at any time from the toolbar popup. Uninstalling the extension deletes
+everything it stored, because all of it lives inside your browser profile and
+nowhere else.
+
+TROUBLESHOOTING
+
+The popup says the model is unavailable. Pattern rules still work; only names and
+addresses are affected. The model is fetched once from a public CDN, so a
+corporate proxy or firewall that blocks that CDN will keep it unavailable.
+
+Nothing is detected on a site that should work. Open the popup and check that the
+header reads Active. If it reads Paused, click Resume protection, then reload the
+tab.
+
+A term keeps getting flagged. Add it to the whitelist in the popup, or select it
+on the page and press Alt+Shift+A.
+
+LINKS
+
+Source code and the full supported-site list:
+https://github.com/JaySmith502/PiiI
+Privacy policy:
+https://github.com/JaySmith502/PiiI/blob/main/PRIVACY.md
+Support and bug reports:
+https://github.com/JaySmith502/PiiI/issues
 
 Open source under the MIT licence.
 ```
+
+> **Length:** 5,018 characters of the 16,000 allowed. Longer is fine, but
+> **do not add more brand names.** The CWS keyword-spam policy caps the sites or
+> brands *listed* in a description at **five**, and this copy already uses five
+> (ChatGPT, Claude, Gemini, Copilot, Perplexity). Additional sites go behind the
+> GitHub link, which the policy explicitly permits.
+>
+> Grok is deliberately omitted. `README.md` documents it as *"best-effort, not
+> supported"* — listing it invites a reviewer to test it and find it broken.
+> Keep the product name to a handful of prose mentions (currently 3); Google
+> advises keeping any single keyword under five instances.
 
 **Graphic assets**
 
@@ -157,9 +233,11 @@ solely to run inference locally; it makes no network requests itself.
 
 ```
 PiiI requests no host permissions and no <all_urls>. Access is limited to the
-nine AI chat domains declared in the content script (ChatGPT, Claude, Gemini,
-Copilot, Grok, Perplexity, DeepSeek), which is where its redaction feature has to
-run to be useful. The extension does not read any other site.
+nine URL patterns declared in the content script, which cover seven chat services
+(ChatGPT, Claude, Gemini, Copilot, Grok, Perplexity, DeepSeek) — two services are
+matched by two patterns each (chat.openai.com and chatgpt.com; grok.com and
+x.com/i/grok). These are the sites where the redaction feature has to run to be
+useful. The extension does not read any other site.
 ```
 
 ### 2c. Remote code — answer this carefully
@@ -251,6 +329,9 @@ minute; on a slow one it will take considerably longer.
 - [x] Under the 2 GB package limit; only production assets in the archive
 - [x] Screenshots captured (§5) — `store/screenshots/`, 4 × 1280×800
 - [x] Small promo tile captured — `store/promo/tile-440x280.png`
+- [x] Description lists exactly five brands and keeps the product name to three
+      prose mentions (CWS keyword-spam policy: no more than five supported
+      sites/brands listed; keep any single keyword under five instances)
 - [ ] $5 developer registration paid (one-off)
 - [ ] Store listing text pasted
 - [ ] Privacy practices tab completed (§2)
