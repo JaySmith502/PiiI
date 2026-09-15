@@ -5,6 +5,23 @@ All notable changes to PiiI are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] — 2026-09-15
+
+### Changed
+
+- **Pinned the detection model's quantisation explicitly.** `pipeline()` now
+  requests `{ dtype: 'q8' }` instead of relying on transformers.js to map the WASM
+  device to that dtype by default. The behaviour today is unchanged — the default
+  already resolves to `q8`, i.e. `onnx/model_quantized.onnx` — but the default is
+  not part of any contract with the upstream library, and it decides the size of
+  the first-run download. An fp32 fallback (`model.onnx`) is 1.11 GB, roughly 4×
+  the ~296 MB that `PRIVACY.md` and the store listing promise. Pinning it means
+  the documented size cannot drift without a visible change in the source.
+- `scripts/screenshots.mjs` now also renders the 440×280 small promo tile
+  (`store/promo/`), so `npm run screenshots` emits the complete store graphic set.
+  `verifyShot()` takes expected dimensions rather than assuming 1280×800, which
+  puts the tile under the same blank/black/mis-sized check as the screenshots.
+
 ## [1.0.4] — 2026-09-15
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
   "name": "piii",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "type": "module",
   "description": "Open-source AI data-loss prevention — detects and masks PII before it leaves your browser.",

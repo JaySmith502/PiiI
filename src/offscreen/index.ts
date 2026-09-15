@@ -49,7 +49,12 @@ class NerPipeline {
     // pipeline() only takes model-load options, so it was silently ignored and
     // the pipeline ran in 'none' mode (raw subword tokens, `.entity` field) with
     // no `.entity_group`, dropping every detection.
-    this.loading = pipeline('token-classification', MODEL)
+    // Pin dtype explicitly. transformers.js currently maps the WASM device to
+    // q8, which resolves to onnx/model_quantized.onnx (~279 MB) — the figure
+    // PRIVACY.md and the store listing promise. Leaving it to the default makes
+    // that size undocumented and free to drift: an fp32 fallback (model.onnx) is
+    // 1.11 GB, ~4x what users and reviewers were told to expect.
+    this.loading = pipeline('token-classification', MODEL, { dtype: 'q8' })
       .then(p => { this.instance = p; this.loading = null; return p })
       .catch(err => { this.loading = null; throw err })
     return this.loading

@@ -1,8 +1,8 @@
 # Chrome Web Store — submission package
 
-Everything needed to publish **PiiI v1.0.4**. Copy-paste from the fenced blocks.
+Everything needed to publish **PiiI v1.0.5**. Copy-paste from the fenced blocks.
 
-- **Artifact:** `release/piii-1.0.4.zip`
+- **Artifact:** `release/piii-1.0.5.zip`
 - **Privacy policy URL:** `https://github.com/JaySmith502/PiiI/blob/main/PRIVACY.md`
 - **Support URL:** `https://github.com/JaySmith502/PiiI/issues`
 - **Homepage URL:** `https://github.com/JaySmith502/PiiI`
@@ -235,7 +235,7 @@ minute; on a slow one it will take considerably longer.
 
 ## 4. Pre-submission checklist
 
-- [x] `manifest.json` at the archive root, version `1.0.4`
+- [x] `manifest.json` at the archive root, version `1.0.5`
 - [x] Version is a plain `x.y.z` (the store rejects a `-beta` suffix)
 - [x] `web_accessible_resources` scoped to chat domains — no `<all_urls>`
 - [x] Every `web_accessible_resources` match is origin-level with a literal `/*`
@@ -320,5 +320,6 @@ default, which resolves to `onnx/model_quantized.onnx` at 278.7 MB. The tokenize
 adds 17.1 MB, all other config files under 10 KB, for **~296 MB (282 MiB)** total.
 The alternative variants are much larger — `model.onnx` (fp32) is 1.11 GB and
 `model_q4.onnx` is 823 MB — so if the default ever stops resolving to `q8`, the
-first-run download silently grows by 3-4×. Worth pinning an explicit `dtype: 'q8'`
-in the `pipeline()` call so the size guarantee cannot drift.
+first-run download silently grows by 3-4×. **Resolved in v1.0.5:** the
+`pipeline()` call now pins `{ dtype: 'q8' }` explicitly, so the size guarantee no
+longer depends on an upstream default.
