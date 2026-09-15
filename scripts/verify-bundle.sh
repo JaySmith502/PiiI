@@ -85,6 +85,7 @@ expected = {
     "03-popup-audit-log.png": (1280, 800),
     "04-welcome.png": (1280, 800),
     "tile-440x280.png": (440, 280),
+    "marquee-1400x560.png": (1400, 560),
 }
 bad = 0
 for name, (ew, eh) in expected.items():

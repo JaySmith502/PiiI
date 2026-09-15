@@ -4,7 +4,9 @@
  *
  * Loads the BUILT extension (dist/) into a real Chromium profile, drives the
  * genuine content script against a locally-served stand-in for a chat composer,
- * and writes 1280x800 PNGs into store/screenshots/.
+ * and writes store-ready PNGs: 1280x800 screenshots plus 640x400 downscales
+ * (the console accepts either size) into store/screenshots/, and both promo
+ * tiles into store/promo/.
  *
  * Why a local stand-in rather than the real chatgpt.com: the store screenshot
  * must not require an account, a live session, or a network round-trip, and it
@@ -19,8 +21,11 @@
  * without it. Name and address rows would additionally appear once the model is
  * cached — see store/SUBMISSION.md.
  *
- * Usage:  node scripts/screenshots.mjs
- *   Requires `npm run build` first (reads dist/).
+ * Usage:  npm run build && node scripts/screenshots.mjs
+ *   Writes:  screenshots  store/screenshots/*.png           1280x800
+ *            downscales   store/screenshots/640x400/*.png    640x400
+ *            small tile   store/promo/tile-440x280.png       440x280
+ *            marquee tile store/promo/marquee-1400x560.png  1400x560
  */
 
 import { chromium } from 'playwright'
@@ -37,10 +42,22 @@ const PROFILE = path.join(tmpdir(), 'piii-screenshot-profile')
 const W = 1280
 const H = 800
 
-// Chrome Web Store "small promo tile". Optional, but a listing cannot be
-// featured without one. Rendered from the same brand system as the frames.
+// The console accepts screenshots at either 1280x800 or 640x400. The captures
+// are native 1280x800 (sharper on high-DPI displays and the size to upload);
+// the 640x400 set is a straight 50% resample of the same frames, kept in a
+// clearly-named subfolder so there is never doubt about which set to upload.
+const SW = 640
+const SH = 400
+const SMALL_OUT = path.join(ROOT, 'store', 'screenshots', '640x400')
+
+// Chrome Web Store promo tiles. Both are optional — a listing ships without
+// them — but the small tile is what makes it eligible for featuring, and the
+// marquee is the wide hero banner shown on the store front page. Rendered from
+// the same brand system as the frames.
 const PW = 440
 const PH = 280
+const MW = 1400
+const MH = 560
 const PROMO_OUT = path.join(ROOT, 'store', 'promo')
 
 // The reviewer test message from store/SUBMISSION.md, trimmed to the categories
@@ -228,6 +245,92 @@ p.tag{font-size:13.5px;line-height:1.5;color:#4A4A4A;margin:0;max-width:34ch}
 }
 
 // ---------------------------------------------------------------------------
+// Marquee promo tile (1400x560). The wide hero banner on the store front page,
+// viewed large — so it earns the extra room: brand mark, the same headline as
+// the small tile (the two are siblings and should read as a pair), and the real
+// popup alongside. The popup is given an explicit height rather than left at
+// natural size, because its natural height exceeds the 560px canvas and the
+// body clips rather than scrolls.
+// ---------------------------------------------------------------------------
+
+function marqueeHtml({ popupB64, iconB64 }) {
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><style>
+${brandFontCss()}
+*{box-sizing:border-box}
+html,body{margin:0;width:${MW}px;height:${MH}px;overflow:hidden}
+body{
+  font-family:'Archivo',system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(1100px 620px at 82% -16%, #D6EAF8 0%, rgba(214,234,248,0) 64%),
+    radial-gradient(880px 520px at 0% 114%, #FFF1C2 0%, rgba(255,241,194,0) 62%),
+    #FAF9F4;
+  color:#141414;display:flex;align-items:center;gap:70px;padding:0 88px;
+}
+.copy{flex:1;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;margin:0 0 20px}
+.brand img{width:34px;height:34px;display:block;border-radius:8px}
+.wordmark{font-family:'Jost',sans-serif;font-weight:900;font-size:26px;letter-spacing:-.02em;line-height:1}
+.kicker{font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:#6E6E6E;margin:0 0 14px}
+h1{font-family:'Jost',sans-serif;font-weight:900;font-size:60px;line-height:1.03;letter-spacing:-.025em;margin:0 0 18px}
+.rule{width:72px;height:6px;background:#1B81CE;margin:0 0 20px}
+p.sub{font-size:17px;line-height:1.6;color:#353535;margin:0 0 26px;max-width:42ch}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px}
+li{display:flex;align-items:flex-start;gap:11px;font-size:15px;color:#525252;line-height:1.4}
+.tick{width:19px;height:19px;flex:none;border-radius:4px;background:#1F9D55;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:1px}
+.panel-wrap{flex:none;position:relative}
+.panel-wrap:before{content:'';position:absolute;inset:14px -14px -14px 14px;background:#141414;border-radius:12px}
+.shot{position:relative;display:block;height:452px;width:auto;border:2px solid #141414;border-radius:12px;box-shadow:0 18px 44px rgba(20,20,20,.16)}
+</style></head>
+<body>
+  <div class="copy">
+    <div class="brand">
+      <img src="data:image/png;base64,${iconB64}" alt="">
+      <span class="wordmark">PiiI</span>
+    </div>
+    <p class="kicker">Browser extension &middot; on-device</p>
+    <h1>Catch PII before<br>you hit send.</h1>
+    <div class="rule"></div>
+    <p class="sub">PiiI catches personal data on the way out of your AI chat and shows you exactly what it found &mdash; before you hit send.</p>
+    <ul>
+      <li><span class="tick">&#10003;</span><span>Names, emails, phones, cards, SSNs, keys and IDs</span></li>
+      <li><span class="tick">&#10003;</span><span>No backend, no account, no telemetry</span></li>
+      <li><span class="tick">&#10003;</span><span>Audit log of categories and counts, never the values</span></li>
+    </ul>
+  </div>
+  <div class="panel-wrap"><img class="shot" src="data:image/png;base64,${popupB64}" alt="PiiI popup"></div>
+</body></html>`
+}
+
+// ---------------------------------------------------------------------------
+
+/**
+ * Writes a resampled copy of a capture. Chromium does the resample rather than
+ * a shell tool, so the downscales are byte-for-byte reproducible from the same
+ * build and need no extra dependency.
+ */
+async function writeDownscale(probe, srcFile, destFile, w, h) {
+  const b64 = readFileSync(srcFile).toString('base64')
+  const out = await probe.evaluate(
+    async ({ b64, w, h }) => {
+      const img = new Image()
+      img.src = 'data:image/png;base64,' + b64
+      await img.decode()
+      const c = document.createElement('canvas')
+      c.width = w
+      c.height = h
+      const ctx = c.getContext('2d')
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, w, h)
+      return c.toDataURL('image/png')
+    },
+    { b64, w, h },
+  )
+  writeFileSync(destFile, Buffer.from(out.split(',')[1], 'base64'))
+}
+
+// ---------------------------------------------------------------------------
 
 /** Guards against shipping a blank/black/mis-sized capture as a store asset. */
 async function verifyShot(probe, file, expectW = W, expectH = H) {
@@ -284,7 +387,9 @@ async function main() {
   })
 
   const results = []
+  const smallShots = []
   let promoShot = null
+  let marqueeShot = null
 
   try {
     // Resolve the extension id from its service worker — the id is derived from
@@ -380,11 +485,15 @@ async function main() {
     const popupShot = path.join(OUT, '_popup-raw.png')
     await popup.screenshot({ path: popupShot })
 
+    // Read once — the raw capture is deleted just below, and the marquee tile
+    // reuses the same image.
+    const popupB64 = readFileSync(popupShot).toString('base64')
+
     const frame = await context.newPage()
     await frame.setViewportSize({ width: W, height: H })
     await frame.setContent(
       frameHtml({
-        popupB64: readFileSync(popupShot).toString('base64'),
+        popupB64,
         title: 'Review every<br>value before<br>it leaves.',
         subtitle:
           'PiiI catches personal data on the way out of your AI chat and shows you exactly what it found - before you hit send.',
@@ -421,6 +530,29 @@ async function main() {
     await tile.waitForTimeout(500)
     promoShot = path.join(PROMO_OUT, 'tile-440x280.png')
     await tile.screenshot({ path: promoShot, omitBackground: false })
+
+    // -- 6. Marquee promo tile (1400x560, wide hero banner) -------------------
+    const marquee = await context.newPage()
+    await marquee.setViewportSize({ width: MW, height: MH })
+    await marquee.setContent(
+      marqueeHtml({
+        popupB64,
+        iconB64: readFileSync(path.join(DIST, 'icons', 'icon256.png')).toString('base64'),
+      }),
+    )
+    await marquee.waitForTimeout(500)
+    marqueeShot = path.join(PROMO_OUT, 'marquee-1400x560.png')
+    await marquee.screenshot({ path: marqueeShot, omitBackground: false })
+
+    // -- 7. 640x400 downscales of the four screenshots ------------------------
+    // The console accepts this smaller size; the native 1280x800 frames above
+    // stay the ones to upload. Emitted so the choice needs no extra tooling.
+    mkdirSync(SMALL_OUT, { recursive: true })
+    for (const f of results) {
+      const dest = path.join(SMALL_OUT, path.basename(f))
+      await writeDownscale(probe, f, dest, SW, SH)
+      smallShots.push(dest)
+    }
   } finally {
     await context.close()
     rmSync(PROFILE, { recursive: true, force: true })
@@ -433,13 +565,18 @@ async function main() {
     const page = await probeCtx.newPage()
     await page.goto('about:blank')
     for (const f of results) checks.push(await verifyShot(page, f))
+    for (const f of smallShots) checks.push(await verifyShot(page, f, SW, SH))
     if (promoShot) checks.push(await verifyShot(page, promoShot, PW, PH))
+    if (marqueeShot) checks.push(await verifyShot(page, marqueeShot, MW, MH))
   } finally {
     await probeCtx.close()
   }
 
   console.log(`\nwrote ${results.length} screenshot(s) to ${path.relative(ROOT, OUT)}/`)
+  if (smallShots.length)
+    console.log(`wrote ${smallShots.length} downscale(s) to ${path.relative(ROOT, SMALL_OUT)}/`)
   if (promoShot) console.log(`wrote promo tile to ${path.relative(ROOT, promoShot)}`)
+  if (marqueeShot) console.log(`wrote marquee tile to ${path.relative(ROOT, marqueeShot)}`)
   if (checks.some((c) => !c)) {
     console.error('one or more captures failed verification')
     process.exit(1)

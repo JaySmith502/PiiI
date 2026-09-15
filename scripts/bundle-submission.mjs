@@ -47,6 +47,7 @@ const ASSETS = [
   { src: 'icons/icon128.png', dest: 'icon128.png', w: 128, h: 128 },
   ...SCREENSHOTS.map(f => ({ src: `store/screenshots/${f}`, dest: f, w: 1280, h: 800 })),
   { src: 'store/promo/tile-440x280.png', dest: 'tile-440x280.png', w: 440, h: 280 },
+  { src: 'store/promo/marquee-1400x560.png', dest: 'marquee-1400x560.png', w: 1400, h: 560 },
 ]
 
 // Documents copied verbatim into the bundle.
@@ -149,6 +150,7 @@ const REWRITES = [
   ['store/SUBMISSION.md', 'SUBMISSION.md'],
   ['store/screenshots/', 'listing-assets/'],
   ['store/promo/tile-440x280.png', 'listing-assets/tile-440x280.png'],
+  ['store/promo/marquee-1400x560.png', 'listing-assets/marquee-1400x560.png'],
   ['icons/icon128.png', 'listing-assets/icon128.png'],
   ['cd /Users/smith/workspace/PiiI', `cd ${outDir}`],
   ['| `PRIVACY.md` |', '| `reference/PRIVACY.md` |'],
@@ -276,9 +278,12 @@ Verify it before uploading — \`./verify.sh\` does this without needing the rep
 | Screenshot 3 | \`listing-assets/03-popup-audit-log.png\` |
 | Screenshot 4 | \`listing-assets/04-welcome.png\` |
 | Small promo tile | \`listing-assets/tile-440x280.png\` |
+| Marquee promo tile | \`listing-assets/marquee-1400x560.png\` |
 
 **Upload the screenshots in the numbered order.** Screenshot 1 leads the listing
 in search results — the numbering matches the upload order, so sort by filename.
+Both screenshot sizes are accepted (1280x800 **or** 640x400); this bundle carries
+the 1280x800 set only, which is the one to upload.
 
 ### Text (paste from these)
 

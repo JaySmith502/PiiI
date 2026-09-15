@@ -96,6 +96,7 @@ WHY YOU CAN TRUST IT
 • Your prompt text and files never leave your device.
 • Detection runs locally: fast regex rules plus an on-device ML model.
 • No PiiI-operated servers exist — there is nothing on our side to store, sell or leak.
+• Open source under the MIT licence — read every line, or build it yourself.
 
 The one exception is disclosed in full: on first run the extension fetches its
 name/address detection model once from the Hugging Face CDN, then caches it.
@@ -149,6 +150,8 @@ on the page and press Alt+Shift+A.
 
 LINKS
 
+Source code:
+https://github.com/JaySmith502/PiiI
 Full supported-site list:
 https://github.com/JaySmith502/PiiI-public/blob/main/SITES.md
 Privacy policy:
@@ -157,7 +160,7 @@ Support and bug reports:
 https://github.com/JaySmith502/PiiI-public/issues
 
 PiiI has no backend, no account and no telemetry — see the privacy policy above
-for the full detail.
+for the full detail. PiiI is open source under the MIT licence.
 ```
 
 > **Length:** 5,149 characters of the 16,000 allowed. Longer is fine, but
@@ -176,8 +179,9 @@ for the full detail.
 | Asset | Requirement | Status |
 |---|---|---|
 | Store icon | 128×128 PNG | `icons/icon128.png` ✅ |
-| Screenshots | 1–5, 1280×800 or 640×400 | ✅ 4 captured in `store/screenshots/` — see §5 |
+| Screenshots | 1–5, 1280×800 or 640×400 | ✅ 4 captured at 1280×800 in `store/screenshots/` — see §5 |
 | Small promo tile | 440×280 PNG (optional, needed to be featured) | ✅ `store/promo/tile-440x280.png` — see §5 |
+| Marquee promo tile | 1400×560 PNG (optional, wide hero banner) | ✅ `store/promo/marquee-1400x560.png` — see §5 |
 
 ---
 
@@ -329,8 +333,10 @@ minute; on a slow one it will take considerably longer.
 - [x] No `host_permissions`
 - [x] Privacy policy written and public
 - [x] Under the 2 GB package limit; only production assets in the archive
-- [x] Screenshots captured (§5) — `store/screenshots/`, 4 × 1280×800
+- [x] Screenshots captured (§5) — `store/screenshots/`, 4 × 1280×800, plus the
+      640×400 downscale set in `store/screenshots/640x400/`
 - [x] Small promo tile captured — `store/promo/tile-440x280.png`
+- [x] Marquee promo tile captured — `store/promo/marquee-1400x560.png`
 - [x] Description lists exactly five brands and keeps the product name to three
       prose mentions (CWS keyword-spam policy: no more than five supported
       sites/brands listed; keep any single keyword under five instances)
@@ -345,8 +351,8 @@ minute; on a slow one it will take considerably longer.
 ## 5. Screenshots
 
 **Captured.** Four images, all exactly 1280×800, in `store/screenshots/`. Upload
-them in this order — the first is the one the listing leads with. The 440×280
-promo tile lives in `store/promo/` and is uploaded on the same tab.
+them in this order — the first is the one the listing leads with. Both promo
+tiles live in `store/promo/` and are uploaded on the same tab.
 
 | # | File | Shows |
 |---|---|---|
@@ -355,12 +361,25 @@ promo tile lives in `store/promo/` and is uploaded on the same tab.
 | 3 | `03-popup-audit-log.png` | Toolbar popup: master toggle, audit log, clear-data controls |
 | 4 | `04-welcome.png` | Welcome page: what PiiI detects, and the five permissions |
 
+**Promo tiles** — both optional, both captured, uploaded on the same tab:
+
+| Tile | File | Size | Notes |
+|---|---|---|---|
+| Small | `store/promo/tile-440x280.png` | 440×280 | Shown in the store grid and needed to be considered for featuring. Read at thumbnail size, so it carries only the mark, the name and one line. |
+| Marquee | `store/promo/marquee-1400x560.png` | 1400×560 | The wide hero banner on the store front page, viewed large. Shares the small tile's headline so the two read as a pair. |
+
+**Two screenshot sizes are accepted** — `1280×800` **or** `640×400`. Upload the
+1280×800 set; it is the sharper of the two. The 640×400 downscales are written to
+`store/screenshots/640x400/` so the smaller option needs no extra tooling, but
+**do not upload both sets to one listing.**
+
 Regenerate any time with:
 
 ```
 npm run build && npm run screenshots
 ```
 
+That writes all ten assets — 4 screenshots, 4 downscales and both promo tiles.
 The script loads the **shipped build** into Chromium and drives the real content
 script against a local fixture page standing in for the chat composer — the
 detectors, highlight overlay, review panel and popup are the actual shipped code.
