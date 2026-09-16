@@ -313,10 +313,52 @@ single purpose; no use to determine creditworthiness or for lending.
 
 ---
 
-## 3. Verification steps for the reviewer
+## 3. Reviewer instructions
 
-Give the reviewer a URL to test — without one they have to guess, and a PII
-extension that cannot be exercised is likely to bounce.
+Two console fields can ask for this, and they differ in length. **§3a** is the one
+capped at **500 characters** — the field that reads *"Provide any instructions
+required to access core extension functionality if additional setup is required
+beyond entering the provided username and password."* **§3b** is the full
+walkthrough, for a field with no limit.
+
+### 3a. Additional-setup instructions (500-char limit)
+
+PiiI has no login, so the honest answer is that nothing has to be set up before a
+reviewer can exercise it. The one thing worth flagging is the automatic first-run
+model download, because a reviewer who meets it without warning may read it as a
+hang. **470 characters** of the 500 allowed:
+
+```
+No login is needed — leave the username and password fields blank; there are no setup steps.
+
+Open https://chatgpt.com (no sign-in needed), paste this in the message box, then press send:
+
+My name is John Smith, call me on (555) 867-5309, email john.smith@example.com, card 4111 1111 1111 1111.
+
+PiiI intercepts before submission and opens a review panel. First run also fetches a ~296 MB name/address model; the popup shows progress and other detection works meanwhile.
+```
+
+> **Leave the username and password fields blank.** PiiI has no account, no
+> sign-in and no backend. Inventing placeholder credentials would imply a login
+> step that does not exist and send the reviewer looking for one.
+
+> **The test prompt is chosen to survive the model download.** Email, phone and
+> card number are matched by synchronous regex rules, so they are detected before
+> the model finishes. A reviewer on a throttled connection still sees a populated
+> review panel rather than an apparently dead extension. `(555)` is a reserved
+> fictional number and the card value is a standard test number, so no real data
+> is involved. The name is deliberately not relied on: name detection needs the
+> model, so it is the one category that may legitimately not fire yet.
+
+> **Why "no sign-in needed" earns its characters.** Interception is a
+> capture-phase listener on `document` (`src/content/submit.ts`), so it fires
+> before the site's own handler, and the chatgpt.com composer
+> (`#prompt-textarea`) exists on the logged-out page. A reviewer without a
+> ChatGPT account can therefore still open the review panel. This was confirmed
+> by code inspection, not by a live logged-out test — worth one manual check
+> before submitting.
+
+### 3b. Full reviewer instructions (no limit)
 
 ```
 No account or credentials are required.

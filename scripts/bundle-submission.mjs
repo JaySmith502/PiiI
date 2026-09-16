@@ -294,7 +294,8 @@ the 1280x800 set only, which is the one to upload.
 | Permission justifications (×5) | \`SUBMISSION.md\` §2b |
 | Remote code + model-download disclosure | \`SUBMISSION.md\` §2c |
 | Data usage defence (if challenged) | \`SUBMISSION.md\` §2d |
-| Reviewer test instructions | \`SUBMISSION.md\` §3 |
+| Reviewer instructions — 500-char field | \`SUBMISSION.md\` §3a (leave username/password blank) |
+| Reviewer instructions — no limit | \`SUBMISSION.md\` §3b |
 | Pre-submission checklist | \`SUBMISSION.md\` §4 |
 
 **Do not skip §2c's free-text field.** See below.
@@ -314,7 +315,9 @@ flag — and that is the difference between a re-review and a rejection.
 Regex detection (email, phone, card, SSN, URL) works instantly and offline. Names
 and addresses need the model, so a reviewer on a throttled connection may see
 "nothing detected" and conclude the extension is broken. §3's reviewer
-instructions pre-empt this. Paste them.
+instructions pre-empt this. Paste them — §3a if the console caps the field at 500
+characters, §3b if it does not. There is no account to sign into: leave any
+username and password fields blank.
 
 ---
 
