@@ -43,7 +43,7 @@ WHAT IT DETECTS
 • Names and postal addresses (on-device ML model)
 • Social security numbers and tax IDs
 • Credit card numbers
-• Passwords, API keys and tokens
+• API keys, access tokens and similar secrets
 • Account, passport, licence and ID numbers
 • URLs and dates
 
@@ -62,9 +62,9 @@ HOW IT WORKS
 4. Accept the suggestions, edit any of them, or send your original text
    unchanged.
 
-Pattern-based categories (email, phone, credit card, SSN, API key) work the
-moment you install. Name and address detection becomes available once the
-detection model has finished downloading — see "Requirements and first run".
+Pattern-based detection works the moment you install. Name and address detection
+becomes available once the detection model has finished downloading — see
+"Requirements and first run".
 
 YOU STAY IN CONTROL
 
@@ -86,8 +86,9 @@ themselves.
 
 ATTACHMENTS TOO
 
-Attached .txt, .csv, .md, .log, .json, .docx and .pdf files are scanned before
-they upload.
+Files you attach are scanned as well, not just the text you type. Common
+document, spreadsheet and plain-text formats are read locally and put through
+the same detection before the upload goes out.
 
 WHY YOU CAN TRUST IT
 
@@ -95,7 +96,6 @@ WHY YOU CAN TRUST IT
 • No analytics, no telemetry, no tracking.
 • Your prompt text and files never leave your device.
 • Detection runs locally: fast regex rules plus an on-device ML model.
-• No PiiI-operated servers exist — there is nothing on our side to store, sell or leak.
 • Open source under the MIT licence — read every line, or build it yourself.
 
 The one exception is disclosed in full: on first run the extension fetches its
@@ -160,19 +160,59 @@ Support and bug reports:
 https://github.com/JaySmith502/PiiI-public/issues
 
 PiiI has no backend, no account and no telemetry — see the privacy policy above
-for the full detail. PiiI is open source under the MIT licence.
+for the full detail. Open source under the MIT licence.
 ```
 
-> **Length:** 5,149 characters of the 16,000 allowed. Longer is fine, but
+> **Length:** 5,300 characters of the 16,000 allowed. Longer is fine, but
 > **do not add more brand names.** The CWS keyword-spam policy caps the sites or
 > brands *listed* in a description at **five**, and this copy already uses five
 > (ChatGPT, Claude, Gemini, Copilot, Perplexity). Additional sites go behind the
-> GitHub link, which the policy explicitly permits.
+> GitHub link, which the policy explicitly permits. Verified against the
+> [Spam policy FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq):
+> *"When listing supported websites or brands in the description, do not list
+> more than five."*
 >
 > Grok is deliberately omitted. `README.md` documents it as *"best-effort, not
 > supported"* — listing it invites a reviewer to test it and find it broken.
-> Keep the product name to a handful of prose mentions (currently 3); Google
-> advises keeping any single keyword under five instances.
+>
+> **Keep the product name to four prose mentions (currently 4).** The FAQ covers
+> this directly: *"Do not mention one word or phrase repeatedly in the description
+> even if it is the primary purpose of the extension"* — its worked example is an
+> extension providing puzzles that *"should not call out the word puzzle more than
+> five times."* The same answer adds that it is *"best to keep instances of a
+> specific keyword to under 5."* Four clears both readings. The name also appears
+> inside the source, privacy and support URLs, which are the real link targets and
+> are not prose repetition. The earlier note here claimed "currently 3" while the
+> copy actually carried six — the figure is now counted, not estimated, so
+> re-count it with `grep` after any edit to this block.
+
+> **Rejected once for keyword formatting — v1.0.6, first submission.** The
+> violation was *Yellow Argon, "having excessive and / or irrelevant keywords in
+> the item's description"*, and the cited content was the old attachments line:
+> `.txt, .csv, .md, .log, .json, .docx and .pdf`. Every one of those formats is
+> genuinely supported (`src/content/fileScanner/extractors.ts` accepts exactly
+> those seven), so this was rejected on **formatting, not accuracy**. A bare
+> comma-separated run of technical tokens reads as keyword stuffing whether or not
+> it is true — the policy prohibits metadata that is "misleading, improperly
+> formatted, non-descriptive, irrelevant, excessive", and a token list is
+> "improperly formatted" on its face.
+>
+> **The rule this establishes: never enumerate in prose.** State the capability in
+> a sentence and stop. The detector list that used to sit in brackets under HOW IT
+> WORKS was removed in the same pass for the same reason. Bullets elsewhere are a
+> different shape and were not flagged — one capability per line is structuring,
+> not stuffing — but do not convert them into comma-separated runs, and do not
+> turn this description into one long list.
+>
+> **One accuracy fix came out of the same pass.** The detector list previously
+> claimed *"Passwords, API keys and tokens"*. There is no password detector
+> anywhere in the extension — `regex/` holds email, phone, url, ssn, creditCard,
+> apiKey, accountId and date, the NER label map has no password entity, and
+> `apiKey.ts` matches known key prefixes, `Bearer` tokens and high-entropy strings
+> only. Claiming a capability the code does not have is a *misleading metadata*
+> offence under the same policy, so the line now reads "API keys, access tokens
+> and similar secrets". If password detection is ever added, this claim can come
+> back — not before.
 
 **Graphic assets**
 
@@ -405,6 +445,12 @@ minute; on a slow one it will take considerably longer.
 - [x] Description lists exactly five brands and keeps the product name to three
       prose mentions (CWS keyword-spam policy: no more than five supported
       sites/brands listed; keep any single keyword under five instances)
+- [x] Description contains **no comma-separated run of technical tokens** — the
+      v1.0.6 file-format list was refused under *Yellow Argon* (excessive /
+      irrelevant keywords). Read the copy once looking only for this pattern
+      before every submission.
+- [x] Every capability claimed in the description is backed by code in
+      `src/content/detection/` (the password claim was removed in v1.0.6)
 - [ ] $5 developer registration paid (one-off)
 - [ ] Store listing text pasted
 - [ ] Privacy practices tab completed (§2)
@@ -475,6 +521,8 @@ about PiiI's own UI.
 | **`offscreen` document** | Frequently queried; reviewers ask why a service worker is insufficient. | §2b explains MV3 cannot host WASM/ONNX inference. |
 | **`wasm-unsafe-eval` in the CSP** | `unsafe-eval` in any form draws scrutiny. | It is the narrow `wasm-unsafe-eval`, not `unsafe-eval`, and it is required to run local WASM inference. Explain if asked. |
 | **"PiiI" branding / lookalike check** | Short names can collide with existing listings. | Name collision will surface at submission; rename in `vite.config.ts` if the console objects. |
+| **Keyword formatting in the listing text** — *materialised once* | The v1.0.6 first submission was refused: *Yellow Argon, excessive/irrelevant keywords*, citing the attachments line `.txt, .csv, .md, .log, .json, .docx and .pdf`. The formats were all accurate; the run of bare tokens was the problem. Rejections are immediate and the whole listing is re-reviewed, so any surviving list invites the same outcome. | Enumeration removed and replaced with prose (see the note under §1). Before submitting, read the description once looking **only** for comma-separated runs of technical terms — and do not reintroduce a format list, however factual. |
+| **Description claims must match the code** | The same detector list also claimed password detection, which does not exist. An unbacked capability claim is *misleading metadata* under the identical policy. | Corrected to "API keys, access tokens and similar secrets". Audit any claim against `src/content/detection/` before adding it — the label map in `src/offscreen/index.ts` is the authoritative list of what the model contributes. |
 
 Rejection is common on a first submission for extensions in this category. If it
 is rejected for the model download, the fallback is to bundle the model weights
